@@ -5,9 +5,9 @@
   "type": "module",
   "scripts": {
     "dev:foodiez": "pnpm --filter @catering-app/foodiez dev",
-    "build:foodiez": "pnpm --filter @catering-app/foodiez run build",
-    "deploy:foodiez": "pnpm --filter @catering-app/foodiez run deploy",
-    "release:foodiez": "pnpm run bulid:frontend && pnpm run deploy:frontend"
+    "build:foodiez": "pnpm --filter @catering-app/foodiez build",
+    "preview:foodiez": "pnpm --filter @catering-app/foodiez preview",
+    "deploy:foodiez": "pnpm --filter @catering-app/foodiez run deploy"
   },
   "engines": {
     "node": ">=20.0.0"

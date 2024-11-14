@@ -1,5 +1,5 @@
 import './App.css'
-import { Foodiez } from './components/All'
+import { Foodiez } from '@/components/All'
 
 function App() {
   return (
