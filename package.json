@@ -1,0 +1,19 @@
+{
+  "name": "catering-app",
+  "private": true,
+  "version": "0.0.1",
+  "type": "module",
+  "scripts": {
+    "dev:foodiez": "pnpm --filter @catering-app/foodiez dev",
+    "build:foodiez": "pnpm --filter @catering-app/foodiez run build",
+    "deploy:foodiez": "pnpm --filter @catering-app/foodiez run deploy",
+    "release:foodiez": "pnpm run bulid:frontend && pnpm run deploy:frontend"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "workspaces": [
+    "packages/contracts",
+    "apps/foodiez"
+  ]
+}
