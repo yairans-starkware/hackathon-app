@@ -1,9 +1,12 @@
 import './App.css'
-import { Foodiez } from '@/components/All'
+import { FoodiezApp } from '@/components/FoodiezApp'
+import { DynamicProvider } from './providers/DynamicProvider'
 
 function App() {
   return (
-    <Foodiez />
+    <DynamicProvider>
+      <FoodiezApp />
+    </DynamicProvider>
   )
 }
 
