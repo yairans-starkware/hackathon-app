@@ -24,7 +24,7 @@ export const DisconnectWalletDialog = ({
           <AlertDialogHeader>
             <AlertDialogTitle>Disconnect Wallet</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to disconnect your wallet? This will unregister you from all meals.
+              Are you sure you want to disconnect your wallet?
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

@@ -44,7 +44,7 @@ export const MealCard = ({
   <Card>
     <CardHeader>
       <CardTitle className="flex justify-between items-center">
-        {isNextMeal ? 'Next Meal' : formatDate(meal.date)}
+        {isNextMeal ? 'Next Meal' : 'Future Meal'}
         {isRegistered(meal.id) && (
           <Badge variant="secondary" className="ml-2">
             Registered
@@ -54,7 +54,7 @@ export const MealCard = ({
     </CardHeader>
     <CardContent>
       <p className="text-2xl font-semibold">{formatDate(meal.date)}</p>
-      <p className="text-xl text-gray-500">${meal.price.toFixed(2)}</p>
+      <p className="text-xl text-gray-500">{meal.price.toFixed(2)} CAT</p>
       {!canAfford && !isRegistered(meal.id) && (
         <div className="flex items-center mt-2 text-red-500">
           <AlertCircle className="w-4 h-4 mr-2" />

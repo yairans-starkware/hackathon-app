@@ -17,7 +17,7 @@ export const Header = ({
   isConnected: boolean;
   balance: number;
   onConnectWallet: () => void;
-  wallet: Wallet<any>,
+  wallet?: Wallet<any>,
 }) => {
   const [isDisconnectDialogOpen, setIsDisconnectDialogOpen] = useState<boolean>(false);
   const {handleLogOut} = useDynamicContext();
@@ -34,7 +34,7 @@ export const Header = ({
   const openDisconnectDialog = () => {
     setIsDisconnectDialogOpen(true);
   }
-
+  
   return (
     <header className="bg-white shadow">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
@@ -43,10 +43,10 @@ export const Header = ({
               {isConnected ? (
               <>
                 <span className="text-sm font-medium text-gray-500">
-                  Balance: ${balance.toFixed(2)}
+                  Balance: {balance.toString()} CAT
                 </span>
                 <span className="text-sm font-medium text-gray-500">
-                  {truncateAddress(wallet.address)}
+                  {truncateAddress(wallet?.address ?? '')}
                 </span>
                 <Button variant="ghost" size="icon" onClick={openDisconnectDialog}>
                   <LogOut className="h-4 w-4" />
