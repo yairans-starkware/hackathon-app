@@ -37,18 +37,19 @@ trait IRegistration<T> {
 mod registration {
     use super::{EventInfo, EventUserInfo};
     use starknet::ContractAddress;
+    use starknet::storage::Map;
 
     #[storage]
     struct Storage {
-        events: LegacyMap<felt252, EventInfo>,
-        event_canceled: LegacyMap<felt252, bool>,
+        events: Map<felt252, EventInfo>,
+        event_canceled: Map<felt252, bool>,
         n_events: usize,
         // A map from user to their token balance.
-        balance: LegacyMap<ContractAddress, u32>,
+        balance: Map<ContractAddress, u32>,
         // A set of users who may request tokens.
-        allowed_users: LegacyMap<ContractAddress, bool>,
+        allowed_users: Map<ContractAddress, bool>,
         // A map from (event_id, user) to whether the user is registered to the event.
-        is_registered_to_event: LegacyMap<(felt252, ContractAddress), bool>,
+        is_registered_to_event: Map<(felt252, ContractAddress), bool>,
     }
 
     #[event]
@@ -126,10 +127,7 @@ mod registration {
 
         fn _check_not_canceled(self: @ContractState, event_id: felt252) {
             self._check_event_exists(event_id);
-            assert(
-                !self.event_canceled.read(event_id),
-                'Event canceled.'
-            );
+            assert(!self.event_canceled.read(event_id), 'Event canceled.');
         }
 
         fn _register_user_to_event(
@@ -137,7 +135,8 @@ mod registration {
         ) {
             self._check_not_canceled(event_id);
             // let event_time: u256 = self.events.read(event_id).time.into();
-            // assert(event_time < starknet::get_block_timestamp().into(), 'Event already started.');
+            // assert(event_time < starknet::get_block_timestamp().into(), 'Event already
+            // started.');
             assert(!self.is_registered_to_event.read((event_id, user)), 'User already registered.');
             self.is_registered_to_event.write((event_id, user), true);
 
@@ -150,7 +149,8 @@ mod registration {
             self._check_event_exists(event_id);
             // let canceled = self.event_canceled.read(event_id);
             // let event_time: u256 = self.events.read(event_id).time.into();
-            // assert(event_time < starknet::get_block_timestamp().into(), 'Event already started.');
+            // assert(event_time < starknet::get_block_timestamp().into(), 'Event already
+            // started.');
             assert(self.is_registered_to_event.read((event_id, user)), 'User not registered.');
             self.is_registered_to_event.write((event_id, user), false);
 
@@ -166,7 +166,9 @@ mod registration {
 
     #[abi(embed_v0)]
     impl RegistrationImpl of super::IRegistration<ContractState> {
-        fn get_events(self: @ContractState, user: ContractAddress, max_n_events: usize) -> Array<EventUserInfo> {
+        fn get_events(
+            self: @ContractState, user: ContractAddress, max_n_events: usize
+        ) -> Array<EventUserInfo> {
             let mut events = ArrayTrait::new();
             let total_n_events = self.n_events.read();
 
@@ -188,10 +190,7 @@ mod registration {
                 }
 
                 let event_user_info = EventUserInfo {
-                    id: index,
-                    time: event.time,
-                    registered,
-                    canceled,
+                    id: index, time: event.time, registered, canceled,
                 };
                 cnt += 1;
                 events.append(event_user_info);
