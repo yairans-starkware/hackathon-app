@@ -8,6 +8,9 @@ use starknet::ContractAddress;
 struct EventInfo {
     /// The time of the event, as a Unix timestamp.
     time: felt252,
+    /// The price of the event.
+    // TODO: Can the price be modified?
+    price: u32,
 }
 
 /// Information about a user's registration to an event.
@@ -34,11 +37,10 @@ trait IRegistration<T> {
     /// Gets the number of events in the contract.
     fn n_events(self: @T) -> usize;
 
-    /// Gets the time of an event, 0 if the event does not exist.
-    fn event_time(self: @T, event_id: felt252) -> felt252;
-
-    /// Gets the time of a range of events.
-    fn event_times(self: @T, start: usize, end: usize) -> Array<felt252>;
+    /// Gets the information of an event. Time will be 0 if the event does not exist.
+    fn event_info(self: @T, event_id: felt252) -> EventInfo;
+    /// Gets the information of a range of events. The range is [start, end).
+    fn events_infos(self: @T, start: usize, end: usize) -> Array<EventInfo>;
 
     /// Registers a user to an event. The user id is the caller address of the transaction.
     fn register(ref self: T, event_id: felt252);
@@ -51,7 +53,7 @@ trait IRegistration<T> {
     fn balanceOf(self: @T, user: ContractAddress) -> u32;
 
     /// Adds an event to the contract.
-    fn add_event(ref self: T, time: felt252);
+    fn add_event(ref self: T, time: felt252, price: u32);
     /// Modifies the time of an event.
     fn modify_event_time(ref self: T, event_id: felt252, time: felt252);
     /// Sets whether an event is canceled.
@@ -64,6 +66,8 @@ trait IRegistration<T> {
 
 #[starknet::contract]
 mod registration {
+    use starknet::storage::StorageAsPointer;
+    use starknet::storage::StoragePathEntry;
     use starknet::storage::StorageMapReadAccess;
     use starknet::storage::StoragePointerWriteAccess;
     use starknet::storage::StoragePointerReadAccess;
@@ -137,10 +141,11 @@ mod registration {
 
     #[generate_trait]
     impl PrivateFunctionsImpl of PrivateFunctions {
-        fn _add_event(ref self: ContractState, time: felt252) {
-            let n_events = self.n_events.read();
-            self.events.write(n_events.into(), EventInfo { time });
-            self.n_events.write(n_events + 1);
+        fn _add_event(ref self: ContractState, time: felt252, price: u32) {
+            let n_events_ptr = self.n_events.as_ptr();
+            let n_events = n_events_ptr.read();
+            self.events.write(n_events.into(), EventInfo { time, price });
+            n_events_ptr.write(n_events + 1);
 
             self.emit(EventChanged { event_id: n_events.into(), time });
         }
@@ -148,7 +153,7 @@ mod registration {
         fn _modify_event_time(ref self: ContractState, event_id: felt252, time: felt252) {
             self._check_event_exists(event_id);
             // TODO: Check not cancelled.
-            self.events.write(event_id, EventInfo { time });
+            self.events.entry(event_id).time.write(time);
 
             self.emit(EventChanged { event_id, time });
         }
@@ -231,21 +236,21 @@ mod registration {
             self.n_events.read()
         }
 
-        fn event_time(self: @ContractState, event_id: felt252) -> felt252 {
-            self.events.read(event_id).time
+        fn event_info(self: @ContractState, event_id: felt252) -> EventInfo {
+            self.events.read(event_id)
         }
 
-        fn event_times(self: @ContractState, start: usize, end: usize) -> Array<felt252> {
-            let mut times = ArrayTrait::new();
+        fn events_infos(self: @ContractState, start: usize, end: usize) -> Array<EventInfo> {
+            let mut events = ArrayTrait::new();
             for i in start..end {
-                times.append(self.events.read(i.into()).time);
+                events.append(self.events.read(i.into()));
             };
-            times
+            events
         }
 
-        fn add_event(ref self: ContractState, time: felt252) {
+        fn add_event(ref self: ContractState, time: felt252, price: u32) {
             // TODO: Check owner.
-            self._add_event(time);
+            self._add_event(time, price);
         }
 
         fn modify_event_time(ref self: ContractState, event_id: felt252, time: felt252) {
