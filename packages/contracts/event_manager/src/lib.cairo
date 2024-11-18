@@ -35,6 +35,10 @@ trait IRegistration<T> {
 
 #[starknet::contract]
 mod registration {
+    use starknet::storage::StorageMapReadAccess;
+    use starknet::storage::StoragePointerWriteAccess;
+    use starknet::storage::StoragePointerReadAccess;
+    use starknet::storage::StorageMapWriteAccess;
     use super::{EventInfo, EventUserInfo};
     use starknet::ContractAddress;
     use starknet::storage::Map;
