@@ -31,6 +31,15 @@ trait IRegistration<T> {
         self: @T, user: ContractAddress, max_n_events: usize
     ) -> Array<EventUserInfo>;
 
+    /// Gets the number of events in the contract.
+    fn n_events(self: @T) -> usize;
+
+    /// Gets the time of an event, 0 if the event does not exist.
+    fn event_time(self: @T, event_id: felt252) -> felt252;
+
+    /// Gets the time of a range of events.
+    fn event_times(self: @T, start: usize, end: usize) -> Array<felt252>;
+
     /// Registers a user to an event. The user id is the caller address of the transaction.
     fn register(ref self: T, event_id: felt252);
     /// Unregisters a user from an event. The user id is the caller address of the transaction.
@@ -216,6 +225,22 @@ mod registration {
                 events.append(event_user_info);
             };
             events
+        }
+
+        fn n_events(self: @ContractState) -> usize {
+            self.n_events.read()
+        }
+
+        fn event_time(self: @ContractState, event_id: felt252) -> felt252 {
+            self.events.read(event_id).time
+        }
+
+        fn event_times(self: @ContractState, start: usize, end: usize) -> Array<felt252> {
+            let mut times = ArrayTrait::new();
+            for i in start..end {
+                times.append(self.events.read(i.into()).time);
+            };
+            times
         }
 
         fn add_event(ref self: ContractState, time: felt252) {
