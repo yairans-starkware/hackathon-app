@@ -1,19 +1,21 @@
-import { Button } from "./ui/button"
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "./ui/card"
+import { Button } from "../ui/button"
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "../ui/card"
 import { AlertCircle, Check, X } from "lucide-react"
-import { Badge } from './ui/badge'
+import { Badge } from '../ui/badge'
 import { useState } from "react"
-import { toast } from "../hooks/use-toast"
-import { Meal } from "../types/meal"
+import { toast } from "../../hooks/use-toast"
+import { Meal } from "../../types/meal"
 
 export const MealCard = ({ 
   isWalletConnected, 
-  meal, 
+  meal,
+  connect,
   canAfford,
   isNextMeal = false 
 }: { 
   meal: Meal, 
   isWalletConnected: boolean,
+  connect: () => void,
   canAfford: boolean,
   isNextMeal?: boolean 
 }) => {
@@ -43,7 +45,7 @@ export const MealCard = ({
   return (
   <Card>
     <CardHeader>
-      <CardTitle className="flex justify-between items-center">
+      <CardTitle className="flex justify-between items-center min-h-[30px]">
         {isNextMeal ? 'Next Meal' : 'Future Meal'}
         {isRegistered(meal.id) && (
           <Badge variant="secondary" className="ml-2">
@@ -55,7 +57,7 @@ export const MealCard = ({
     <CardContent>
       <p className="text-2xl font-semibold">{formatDate(meal.date)}</p>
       <p className="text-xl text-gray-500">{meal.price.toFixed(2)} CAT</p>
-      {!canAfford && !isRegistered(meal.id) && (
+      {isWalletConnected && !canAfford && !isRegistered(meal.id) && (
         <div className="flex items-center mt-2 text-red-500">
           <AlertCircle className="w-4 h-4 mr-2" />
           <span className="text-sm">Insufficient balance</span>
@@ -65,20 +67,20 @@ export const MealCard = ({
     <CardFooter>
       <Button 
         className="w-full" 
-        onClick={() => handleRegistration(meal)}
-        disabled={!isWalletConnected || (!canAfford && !isRegistered(meal.id))}
+        onClick={() => isWalletConnected ? handleRegistration(meal) : connect()}
+        disabled={isWalletConnected && !canAfford && !isRegistered(meal.id)}
       >
         {isRegistered(meal.id) ? (
           <>
             <X className="mr-2 h-4 w-4" />
             Unregister
           </>
-        ) : (
-          <>
-            <Check className="mr-2 h-4 w-4" />
-            Register
-          </>
-        )}
+        ) : isWalletConnected ? (
+              <>
+              <Check className="mr-2 h-4 w-4" />
+              Register
+              </>
+            ) : 'Connect Wallet'}
       </Button>
     </CardFooter>
   </Card>

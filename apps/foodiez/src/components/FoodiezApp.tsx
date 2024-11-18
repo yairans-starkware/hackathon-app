@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Header } from './Header/Header'
 import { useDynamicContext, useUserWallets } from '@dynamic-labs/sdk-react-core'
-import { MealCard } from './MealCard'
+import { MealCard } from './MealCard/MealCard'
 import { Meal } from '../types/meal'
 
 export const FoodiezApp = () => {
@@ -36,12 +36,12 @@ export const FoodiezApp = () => {
       <Header wallet={starknetWallet} isConnected={isWalletConnected} onConnectWallet={onConnectWallet} balance={balance} />
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="space-y-12">
-          <MealCard canAfford={canAfford(nextMeal.price)} meal={nextMeal} isWalletConnected={isWalletConnected} isNextMeal />
+          <MealCard connect={onConnectWallet} canAfford={canAfford(nextMeal.price)} meal={nextMeal} isWalletConnected={isWalletConnected} isNextMeal />
           <div>
             <h2 className="text-2xl font-bold mb-6">Future Meals</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {futureMeals.map((meal) => (
-                <MealCard canAfford={canAfford(meal.price)} key={meal.id} meal={meal} isWalletConnected={isWalletConnected} />
+                <MealCard connect={onConnectWallet} canAfford={canAfford(meal.price)} key={meal.id} meal={meal} isWalletConnected={isWalletConnected} />
               ))}
             </div>
           </div>
