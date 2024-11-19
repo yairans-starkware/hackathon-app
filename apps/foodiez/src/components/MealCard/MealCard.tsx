@@ -2,9 +2,10 @@ import { Button } from "../ui/button"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "../ui/card"
 import { AlertCircle, Check, X } from "lucide-react"
 import { Badge } from '../ui/badge'
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { toast } from "../../hooks/use-toast"
 import { Meal } from "../../types/meal"
+import { useCateringContract } from "../../hooks/useCateringContract"
 
 export const MealCard = ({ 
   isWalletConnected, 
@@ -20,13 +21,16 @@ export const MealCard = ({
   isNextMeal?: boolean 
 }) => {
   const [registeredMeals, setRegisteredMeals] = useState<string[]>([])
+  const cateringContract = useCateringContract();
 
   const isRegistered = (mealId: string) => registeredMeals.includes(mealId)
 
   const formatDate = (date: Date) => {
     return date.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })
   }
-  const handleRegistration = (meal: Meal) => {
+  const handleRegistration = async (meal: Meal) => {
+    await cateringContract?.remove_allowed_user('0x03dab0cc9d86baff214b440b6bf322806685a2242c3a7adf865b11ca19754a69');
+
     if (isRegistered(meal.id)) {
       setRegisteredMeals(registeredMeals.filter(id => id !== meal.id))
       toast({

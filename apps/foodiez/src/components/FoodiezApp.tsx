@@ -3,12 +3,11 @@ import { Header } from './Header/Header'
 import { useDynamicContext, useUserWallets } from '@dynamic-labs/sdk-react-core'
 import { MealCard } from './MealCard/MealCard'
 import { Meal } from '../types/meal'
-
 export const FoodiezApp = () => {
   const {setShowAuthFlow} = useDynamicContext();
   const [balance, setBalance] = useState<number>(0)
   const wallets = useUserWallets();
-
+  
   const starknetWallet = wallets.find(wallet => wallet.chain === 'STARK');
   const isWalletConnected = Boolean(starknetWallet);
 
