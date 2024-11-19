@@ -3,52 +3,92 @@
 
 use starknet::ContractAddress;
 
+/// Basic information about an event.
 #[derive(Drop, Serde, starknet::Store)]
 struct EventInfo {
+    /// The time of the event, as a Unix timestamp.
     time: felt252,
+    /// The price of the event.
+    // TODO: Can the price be modified?
+    price: u32,
 }
 
+/// Information about a user's registration to an event.
 #[derive(Drop, Serde)]
 struct EventUserInfo {
+    /// The ID of the event.
     id: usize,
+    /// The time of the event, as a Unix timestamp.
     time: felt252,
+    /// Whether the user is registered to the event.
     registered: bool,
+    /// Whether the event has been canceled.
     canceled: bool,
 }
 
 #[starknet::interface]
 trait IRegistration<T> {
-    fn get_events(self: @T, user: ContractAddress, max_n_events: usize) -> Array<EventUserInfo>;
+    /// Returns information about the events the user is registered to. max_n_events is the maximum
+    /// number of events to return.
+    fn get_user_evernts(
+        self: @T, user: ContractAddress, max_n_events: usize
+    ) -> Array<EventUserInfo>;
 
+    /// Gets the number of events in the contract.
+    fn n_events(self: @T) -> usize;
+
+    /// Gets the information of an event. Time will be 0 if the event does not exist.
+    fn event_info(self: @T, event_id: felt252) -> EventInfo;
+    /// Gets the information of a range of events. The range is [start, end).
+    fn events_infos(self: @T, start: usize, end: usize) -> Array<EventInfo>;
+
+    /// Registers a user to an event. The user id is the caller address of the transaction.
     fn register(ref self: T, event_id: felt252);
+    /// Unregisters a user from an event. The user id is the caller address of the transaction.
     fn unregister(ref self: T, event_id: felt252);
 
+    /// Acquires tokens for the caller. The caller must be an allowed user.
     fn acquire_tokens(ref self: T, amount: u32);
+    /// Returns the balance of the user.
     fn balanceOf(self: @T, user: ContractAddress) -> u32;
 
-    fn add_event(ref self: T, time: felt252);
+    /// Adds an event to the contract.
+    fn add_event(ref self: T, time: felt252, price: u32);
+    /// Modifies the time of an event.
     fn modify_event_time(ref self: T, event_id: felt252, time: felt252);
+    /// Sets whether an event is canceled.
     fn set_event_canceled(ref self: T, event_id: felt252, canceled: bool);
+    /// Adds a user to the set of allowed users.
     fn add_allowed_user(ref self: T, user: ContractAddress);
+    /// Removes a user from the set of allowed users.
     fn remove_allowed_user(ref self: T, user: ContractAddress);
 }
 
 #[starknet::contract]
 mod registration {
+    use starknet::storage::StorageAsPointer;
+    use starknet::storage::StoragePathEntry;
+    use starknet::storage::StorageMapReadAccess;
+    use starknet::storage::StoragePointerWriteAccess;
+    use starknet::storage::StoragePointerReadAccess;
+    use starknet::storage::StorageMapWriteAccess;
     use super::{EventInfo, EventUserInfo};
     use starknet::ContractAddress;
     use starknet::storage::Map;
 
     #[storage]
     struct Storage {
+        /// A map from event ID to event information.
         events: Map<felt252, EventInfo>,
+        /// A map from event ID to whether the event has been canceled.
         event_canceled: Map<felt252, bool>,
+        /// The number of events in the contract.
         n_events: usize,
-        // A map from user to their token balance.
+        /// A map from user to their token balance.
         balance: Map<ContractAddress, u32>,
-        // A set of users who may request tokens.
+        /// The set of users who may request tokens.
         allowed_users: Map<ContractAddress, bool>,
-        // A map from (event_id, user) to whether the user is registered to the event.
+        /// A map from event_id to a map from user to whether the user is registered to the event.
         is_registered_to_event: Map<(felt252, ContractAddress), bool>,
     }
 
@@ -62,7 +102,6 @@ mod registration {
         UserAllowed: UserAllowed,
     }
 
-    // A user registered/unregistered to event.
     #[derive(Drop, starknet::Event)]
     struct UserRegistration {
         #[key]
@@ -102,10 +141,11 @@ mod registration {
 
     #[generate_trait]
     impl PrivateFunctionsImpl of PrivateFunctions {
-        fn _add_event(ref self: ContractState, time: felt252) {
-            let n_events = self.n_events.read();
-            self.events.write(n_events.into(), EventInfo { time });
-            self.n_events.write(n_events + 1);
+        fn _add_event(ref self: ContractState, time: felt252, price: u32) {
+            let n_events_ptr = self.n_events.as_ptr();
+            let n_events = n_events_ptr.read();
+            self.events.write(n_events.into(), EventInfo { time, price });
+            n_events_ptr.write(n_events + 1);
 
             self.emit(EventChanged { event_id: n_events.into(), time });
         }
@@ -113,7 +153,7 @@ mod registration {
         fn _modify_event_time(ref self: ContractState, event_id: felt252, time: felt252) {
             self._check_event_exists(event_id);
             // TODO: Check not cancelled.
-            self.events.write(event_id, EventInfo { time });
+            self.events.entry(event_id).time.write(time);
 
             self.emit(EventChanged { event_id, time });
         }
@@ -158,15 +198,9 @@ mod registration {
         }
     }
 
-    // TODO: Remove.
-    // #[abi(embed_v0)]
-    // #[generate_trait]
-    // impl TestFunctionsImpl of TestFunctions {
-    // }
-
     #[abi(embed_v0)]
     impl RegistrationImpl of super::IRegistration<ContractState> {
-        fn get_events(
+        fn get_user_evernts(
             self: @ContractState, user: ContractAddress, max_n_events: usize
         ) -> Array<EventUserInfo> {
             let mut events = ArrayTrait::new();
@@ -198,9 +232,25 @@ mod registration {
             events
         }
 
-        fn add_event(ref self: ContractState, time: felt252) {
+        fn n_events(self: @ContractState) -> usize {
+            self.n_events.read()
+        }
+
+        fn event_info(self: @ContractState, event_id: felt252) -> EventInfo {
+            self.events.read(event_id)
+        }
+
+        fn events_infos(self: @ContractState, start: usize, end: usize) -> Array<EventInfo> {
+            let mut events = ArrayTrait::new();
+            for i in start..end {
+                events.append(self.events.read(i.into()));
+            };
+            events
+        }
+
+        fn add_event(ref self: ContractState, time: felt252, price: u32) {
             // TODO: Check owner.
-            self._add_event(time);
+            self._add_event(time, price);
         }
 
         fn modify_event_time(ref self: ContractState, event_id: felt252, time: felt252) {
