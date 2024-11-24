@@ -65,10 +65,16 @@ trait IRegistration<T> {
     fn add_allowed_user(ref self: T, user: ContractAddress);
     /// Removes a user from the set of allowed users.
     fn remove_allowed_user(ref self: T, user: ContractAddress);
+
+    /// Checks whether the user is an admin.
+    fn is_admin(self: @T, user: ContractAddress) -> bool;
+    /// Adds a user to the set of admins.
+    fn add_admin(ref self: T, user: ContractAddress);
 }
 
 #[starknet::contract]
 mod registration {
+    use super::IRegistration;
     use starknet::storage::VecTrait;
     use starknet::storage::MutableVecTrait;
     use crate::utils::time::{Time, TimeTrait};
@@ -99,6 +105,9 @@ mod registration {
         allowed_users: Map<ContractAddress, bool>,
         /// A map from event_id to a map from user to whether the user is registered to the event.
         is_registered_to_event: Map<(felt252, ContractAddress), bool>,
+        /// A set of admins.
+        // TODO: Use Roles component.
+        admins: Map<ContractAddress, bool>,
     }
 
     #[event]
@@ -146,7 +155,9 @@ mod registration {
     }
 
     #[constructor]
-    fn constructor(ref self: ContractState) {}
+    fn constructor(ref self: ContractState) {
+        self.admins.write(starknet::get_caller_address(), true);
+    }
 
     #[generate_trait]
     impl PrivateFunctionsImpl of PrivateFunctions {
@@ -355,6 +366,16 @@ mod registration {
 
         fn balanceOf(self: @ContractState, user: ContractAddress) -> u32 {
             self.balance.read(user)
+        }
+
+        fn is_admin(self: @ContractState, user: ContractAddress) -> bool {
+            self.admins.read(user)
+        }
+
+        fn add_admin(ref self: ContractState, user: ContractAddress) {
+            let caller_address = starknet::get_caller_address();
+            assert(self.is_admin(caller_address), 'Caller is not an admin.');
+            self.admins.write(user, true);
         }
     }
 }
