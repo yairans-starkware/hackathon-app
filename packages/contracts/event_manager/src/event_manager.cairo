@@ -13,6 +13,8 @@ struct EventInfo {
     /// The price of the event.
     // TODO: Can the price be modified?
     price: u32,
+    /// The number of users registered to the event.
+    number_of_participants: u32,
 }
 
 /// Information about a user's registration to an event.
@@ -169,7 +171,9 @@ mod registration {
             let time = TimeTrait::new(time.try_into().expect('Invalid time'));
             let event_id = n_events + 1;
             let event_day = time.day();
-            self.events.write(n_events.into(), EventInfo { time, price });
+            self
+                .events
+                .write(n_events.into(), EventInfo { time, price, number_of_participants: 0 });
             n_events_ptr.write(event_id);
             self.events_by_day.entry(event_day).append().write(event_id.into());
 
@@ -202,11 +206,12 @@ mod registration {
             ref self: ContractState, event_id: felt252, user: ContractAddress
         ) {
             self._check_not_canceled(event_id);
-            // let event_time: u256 = self.events.read(event_id).time.into();
-            // assert(event_time < starknet::get_block_timestamp().into(), 'Event already
-            // started.');
             assert(!self.is_registered_to_event.read((event_id, user)), 'User already registered.');
             self.is_registered_to_event.write((event_id, user), true);
+            // TODO: Explain why we need to use a pointer here.
+            let n_participants_ptr = self.events.entry(event_id).number_of_participants;
+            let n_participants = n_participants_ptr.read();
+            n_participants_ptr.write(n_participants + 1);
 
             self.emit(UserRegistration { user, event_id, status: true });
         }
@@ -221,6 +226,10 @@ mod registration {
             // started.');
             assert(self.is_registered_to_event.read((event_id, user)), 'User not registered.');
             self.is_registered_to_event.write((event_id, user), false);
+
+            let n_participants_ptr = self.events.entry(event_id).number_of_participants;
+            let n_participants = n_participants_ptr.read();
+            n_participants_ptr.write(n_participants - 1);
 
             self.emit(UserRegistration { user, event_id, status: false });
         }
