@@ -65,6 +65,8 @@ trait IRegistration<T> {
     fn add_allowed_user(ref self: T, user: ContractAddress);
     /// Removes a user from the set of allowed users.
     fn remove_allowed_user(ref self: T, user: ContractAddress);
+    /// Adds a list of users to the set of allowed users.
+    fn add_allowed_users(ref self: T, users: Span<ContractAddress>);
 
     /// Checks whether the user is an admin.
     fn is_admin(self: @T, user: ContractAddress) -> bool;
@@ -328,6 +330,13 @@ mod registration {
             self.allowed_users.write(user, false);
 
             self.emit(UserAllowed { user, allowed: false });
+        }
+
+        fn add_allowed_users(ref self: ContractState, users: Span<ContractAddress>) {
+            // TODO: Check owner.
+            for user in users {
+                self.add_allowed_user(*user);
+            }
         }
 
         fn register(ref self: ContractState, event_id: felt252) {
