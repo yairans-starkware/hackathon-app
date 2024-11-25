@@ -5,7 +5,6 @@ import { Badge } from '../ui/badge'
 import { Meal } from "../../types/meal"
 import { useCateringContract } from "../../hooks/useCateringContract"
 import { openFullscreenLoader } from "../FullscreenLoaderModal/FullscreenLoaderModal"
-import { TransactionFinalityStatus } from "starknet"
 
 export const MealCard = ({ 
   meal,
@@ -20,7 +19,7 @@ export const MealCard = ({
   isPastMeal?: boolean; 
   isWalletConnected?: boolean,
   connect?: () => void,
-  updateMeal: (mealId: string) => void,
+  updateMeal?: (mealId: string) => void,
   canAfford?: boolean,
   isNextMeal?: boolean 
 }) => {
@@ -37,17 +36,17 @@ export const MealCard = ({
         closeFullscreenLoader = openFullscreenLoader('Unregistering you from meal...');
         const {transaction_hash} = await contract?.unregister(meal.id);
         await contract?.providerOrAccount?.waitForTransaction(transaction_hash, { retryInterval: 1e3 });
-        updateMeal(meal.id);
+        updateMeal?.(meal.id);
       } else if (canAfford) {
         closeFullscreenLoader = openFullscreenLoader('Booking you up...');
         const {transaction_hash} = await contract?.register(meal.id);
         await contract?.providerOrAccount?.waitForTransaction(transaction_hash, { retryInterval: 1e3 });
-        updateMeal(meal.id);
+        updateMeal?.(meal.id);
       }
     } catch (e) {
       console.error('Error: meal status update failed', e);
     } finally {
-      closeFullscreenLoader();
+      closeFullscreenLoader?.();
     }
   }
 

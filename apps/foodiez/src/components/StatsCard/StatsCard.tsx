@@ -2,30 +2,21 @@ import { MonthlyStats } from "../../types/stats";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "../ui/chart";
 import { PieChart as RechartsChart, Pie, Cell, ResponsiveContainer } from 'recharts'
-import { EmptyStatsCard } from "./EmptyStatsCard";
 
 const COLORS = ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40', '#FF6384'];
 
 export const StatsCard = ({ 
   stats,
-  selectedMonth,
-  setActiveTab,
 }: { 
   stats?: MonthlyStats,
   selectedMonth: string,
   setActiveTab: React.Dispatch<React.SetStateAction<string>>,
 }) => {
-  const mealCount = Object.values(stats?.mealsByDay ?? {}).reduce((mealsCount, acc) => mealsCount + acc, 0)
-  if (mealCount === 0) {
-    return (
-      <EmptyStatsCard
-        selectedMonth={selectedMonth}
-        setActiveTab={setActiveTab} 
-      />
-    );
+  if (!stats) {
+    return null;
   }
 
-  const pieData = Object.entries(stats.mealsByDay).map(([name, value]) => ({ name, value }));
+  const pieData = Object.entries(stats?.mealsByDay).map(([name, value]) => ({ name, value }));
 
   return (
     <Card className="w-full">

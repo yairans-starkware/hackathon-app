@@ -15,7 +15,7 @@ export const Header = ({
   wallet,
 }: {
   isConnected: boolean;
-  balance: number;
+  balance?: number;
   onConnectWallet: () => void;
   wallet?: Wallet<any>,
 }) => {

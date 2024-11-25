@@ -4,10 +4,8 @@ import { Card, CardContent } from "../ui/card"
 
 export const EmptyStatsCard = ({
   setActiveTab,
-  selectedDate,
 }: {
   setActiveTab: React.Dispatch<React.SetStateAction<string>>,
-  selectedDate: string,
 }) => {
   const handleNavigateToUpcomingMeals = () => {
     setActiveTab(AppTabs.UPCOMING_MEALS);
@@ -19,7 +17,7 @@ export const EmptyStatsCard = ({
         <img src={`/empty-meals-illustration.webp`} alt='no-meals-illustration' className="h-56 w-56 rounded-xl"/>
         <h3 className="text-xl font-semibold mt-4 mb-2">No meals found</h3>
         <p className="text-gray-600 max-w-md">
-          {`You haven\'t participated in any meals in ${selectedDate}. Start your culinary journey by registering for an upcoming meal!`}
+          {`You haven\'t participated in any meals in the selected month. Start your culinary journey by registering for an upcoming meal!`}
         </p>
         <Button className="mt-4" onClick={handleNavigateToUpcomingMeals}>
           Explore Upcoming Meals

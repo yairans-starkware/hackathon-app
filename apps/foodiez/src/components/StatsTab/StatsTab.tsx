@@ -45,10 +45,7 @@ export const StatsTab = ({
         </Select>
       </div>
       {mealCount === 0 ? (
-        <EmptyStatsCard
-          selectedDate={formattedMonth}
-          setActiveTab={setActiveTab} 
-        />
+        <EmptyStatsCard setActiveTab={setActiveTab} />
       ) : (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             <div>
