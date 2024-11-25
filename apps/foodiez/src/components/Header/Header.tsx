@@ -38,12 +38,15 @@ export const Header = ({
   return (
     <header className="bg-white shadow">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
-          <h1 className="text-3xl font-bold text-gray-900">foodiez</h1>
+        <div className="flex items-center space-x-4">
+          <img src={`/starkitchen-logo-transparent.png`} alt="StarKitchen Logo" className="h-12" />
+          <h1 className="text-3xl font-bold text-gray-900">StarKitchen</h1>
+        </div>
           <div className="flex items-center space-x-4">
               {isConnected ? (
               <>
                 <span className="text-sm font-medium text-gray-500">
-                  Balance: {balance.toString()} CAT
+                  Balance: {balance} CAT
                 </span>
                 <span className="text-sm font-medium text-gray-500">
                   {truncateAddress(wallet?.address ?? '')}

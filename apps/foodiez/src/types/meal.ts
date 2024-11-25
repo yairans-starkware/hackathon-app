@@ -1,5 +1,6 @@
 export type Meal = {
   id: string;
-  date: Date;
-  price: number;
+  time: number;
+  registered: boolean;
+  canceled: boolean;
 }

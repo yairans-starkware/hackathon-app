@@ -1,48 +1,53 @@
 import { Button } from "../ui/button"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "../ui/card"
-import { AlertCircle, Check, X } from "lucide-react"
+import { AlertCircle, Check, WalletIcon, X } from "lucide-react"
 import { Badge } from '../ui/badge'
-import { useEffect, useState } from "react"
-import { toast } from "../../hooks/use-toast"
 import { Meal } from "../../types/meal"
 import { useCateringContract } from "../../hooks/useCateringContract"
+import { openFullscreenLoader } from "../FullscreenLoaderModal/FullscreenLoaderModal"
+import { TransactionFinalityStatus } from "starknet"
 
 export const MealCard = ({ 
-  isWalletConnected, 
   meal,
   connect,
-  canAfford,
+  updateMeal,
+  isPastMeal = false,
+  isWalletConnected = false,
+  canAfford = false,
   isNextMeal = false 
 }: { 
-  meal: Meal, 
-  isWalletConnected: boolean,
-  connect: () => void,
-  canAfford: boolean,
+  meal: Meal,
+  isPastMeal?: boolean; 
+  isWalletConnected?: boolean,
+  connect?: () => void,
+  updateMeal: (mealId: string) => void,
+  canAfford?: boolean,
   isNextMeal?: boolean 
 }) => {
-  const [registeredMeals, setRegisteredMeals] = useState<string[]>([])
-  const cateringContract = useCateringContract();
-
-  const isRegistered = (mealId: string) => registeredMeals.includes(mealId)
-
+  const contract = useCateringContract();
+  
   const formatDate = (date: Date) => {
     return date.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })
   }
-  const handleRegistration = async (meal: Meal) => {
-    await cateringContract?.remove_allowed_user('0x03dab0cc9d86baff214b440b6bf322806685a2242c3a7adf865b11ca19754a69');
 
-    if (isRegistered(meal.id)) {
-      setRegisteredMeals(registeredMeals.filter(id => id !== meal.id))
-      toast({
-        title: "Unregistered",
-        description: `You've been unregistered from the meal on ${formatDate(meal.date)}.`,
-      })
-    } else if (canAfford) {
-      setRegisteredMeals([...registeredMeals, meal.id])
-      toast({
-        title: "Registered",
-        description: `You've been registered for the meal on ${formatDate(meal.date)}.`,
-      })
+  const handleRegistration = async () => {
+    let closeFullscreenLoader;
+    try {
+      if (meal.registered) {
+        closeFullscreenLoader = openFullscreenLoader('Unregistering you from meal...');
+        const {transaction_hash} = await contract?.unregister(meal.id);
+        await contract?.providerOrAccount?.waitForTransaction(transaction_hash, { retryInterval: 1e3 });
+        updateMeal(meal.id);
+      } else if (canAfford) {
+        closeFullscreenLoader = openFullscreenLoader('Booking you up...');
+        const {transaction_hash} = await contract?.register(meal.id);
+        await contract?.providerOrAccount?.waitForTransaction(transaction_hash, { retryInterval: 1e3 });
+        updateMeal(meal.id);
+      }
+    } catch (e) {
+      console.error('Error: meal status update failed', e);
+    } finally {
+      closeFullscreenLoader();
     }
   }
 
@@ -50,42 +55,50 @@ export const MealCard = ({
   <Card>
     <CardHeader>
       <CardTitle className="flex justify-between items-center min-h-[30px]">
-        {isNextMeal ? 'Next Meal' : 'Future Meal'}
-        {isRegistered(meal.id) && (
+        {isNextMeal ? 'Next Meal' : isPastMeal ? 'Past Meal' : 'Future Meal'}
+        {meal.registered ? (
           <Badge variant="secondary" className="ml-2">
             Registered
           </Badge>
-        )}
+        ) : null}
       </CardTitle>
     </CardHeader>
     <CardContent>
-      <p className="text-2xl font-semibold">{formatDate(meal.date)}</p>
-      <p className="text-xl text-gray-500">{meal.price.toFixed(2)} CAT</p>
-      {isWalletConnected && !canAfford && !isRegistered(meal.id) && (
+      <p className="text-2xl font-semibold">{formatDate(new Date(Number(meal.time)))}</p>
+      <p className="text-xl text-gray-500">1 CAT</p>
+      {isWalletConnected && !canAfford && !meal.registered ? (
         <div className="flex items-center mt-2 text-red-500">
           <AlertCircle className="w-4 h-4 mr-2" />
           <span className="text-sm">Insufficient balance</span>
         </div>
-      )}
+      ) : null}
     </CardContent>
-    <CardFooter>
-      <Button 
-        className="w-full" 
-        onClick={() => isWalletConnected ? handleRegistration(meal) : connect()}
-        disabled={isWalletConnected && !canAfford && !isRegistered(meal.id)}
-      >
-        {isRegistered(meal.id) ? (
-          <>
-            <X className="mr-2 h-4 w-4" />
-            Unregister
-          </>
-        ) : isWalletConnected ? (
-              <>
+    {isPastMeal ? null : (
+      <CardFooter>
+      {isWalletConnected ? (
+        <Button 
+          className="w-full" 
+          onClick={handleRegistration}
+          disabled={isWalletConnected && !canAfford && !meal.registered}
+        >
+          {meal.registered ? (
+            <>
+              <X className="mr-2 h-4 w-4" />
+              Unregister
+            </>
+          ) : (
+            <>
               <Check className="mr-2 h-4 w-4" />
               Register
-              </>
-            ) : 'Connect Wallet'}
-      </Button>
-    </CardFooter>
+            </>
+          )}
+        </Button>
+      ) : (
+        <Button onClick={connect}>
+          <WalletIcon className="mr-2 h-4 w-4" />
+          Connect Wallet
+        </Button>
+      )}
+    </CardFooter>)}
   </Card>
 )}

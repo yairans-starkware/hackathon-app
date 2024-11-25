@@ -1,11 +1,11 @@
 import './App.css'
-import { FoodiezApp } from '@/components/FoodiezApp'
+import { StarkitchenApp } from '@/components/StarkitchenApp'
 import { DynamicProvider } from './providers/DynamicProvider'
 
 function App() {
   return (
     <DynamicProvider>
-      <FoodiezApp />
+      <StarkitchenApp />
     </DynamicProvider>
   )
 }

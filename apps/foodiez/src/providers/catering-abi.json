@@ -2,7 +2,7 @@
   {
     "name": "RegistrationImpl",
     "type": "impl",
-    "interface_name": "/home/gil/workspace/catering/src::IRegistration"
+    "interface_name": "event_manager::IRegistration"
   },
   {
     "name": "core::bool",
@@ -19,7 +19,7 @@
     ]
   },
   {
-    "name": "/home/gil/workspace/catering/src::EventUserInfo",
+    "name": "event_manager::EventUserInfo",
     "type": "struct",
     "members": [
       {
@@ -41,11 +41,25 @@
     ]
   },
   {
-    "name": "/home/gil/workspace/catering/src::IRegistration",
+    "name": "event_manager::EventInfo",
+    "type": "struct",
+    "members": [
+      {
+        "name": "time",
+        "type": "core::felt252"
+      },
+      {
+        "name": "price",
+        "type": "core::integer::u32"
+      }
+    ]
+  },
+  {
+    "name": "event_manager::IRegistration",
     "type": "interface",
     "items": [
       {
-        "name": "get_events",
+        "name": "get_user_evernts",
         "type": "function",
         "inputs": [
           {
@@ -59,7 +73,54 @@
         ],
         "outputs": [
           {
-            "type": "core::array::Array::</home/gil/workspace/catering/src::EventUserInfo>"
+            "type": "core::array::Array::<event_manager::EventUserInfo>"
+          }
+        ],
+        "state_mutability": "view"
+      },
+      {
+        "name": "n_events",
+        "type": "function",
+        "inputs": [],
+        "outputs": [
+          {
+            "type": "core::integer::u32"
+          }
+        ],
+        "state_mutability": "view"
+      },
+      {
+        "name": "event_info",
+        "type": "function",
+        "inputs": [
+          {
+            "name": "event_id",
+            "type": "core::felt252"
+          }
+        ],
+        "outputs": [
+          {
+            "type": "event_manager::EventInfo"
+          }
+        ],
+        "state_mutability": "view"
+      },
+      {
+        "name": "event_times",
+        "type": "function",
+        "inputs": [
+          {
+            "name": "start",
+            "type": "core::integer::u32"
+          },
+          {
+            "name": "end",
+            "type": "core::integer::u32"
+          }
+        ],
+        "outputs": [
+          {
+            "type": "core::array::Array::<event_manager::EventInfo>"
           }
         ],
         "state_mutability": "view"
@@ -123,6 +184,10 @@
           {
             "name": "time",
             "type": "core::felt252"
+          },
+          {
+            "name": "price",
+            "type": "core::integer::u32"
           }
         ],
         "outputs": [],
@@ -193,7 +258,7 @@
   },
   {
     "kind": "struct",
-    "name": "/home/gil/workspace/catering/src::registration::UserRegistration",
+    "name": "event_manager::registration::UserRegistration",
     "type": "event",
     "members": [
       {
@@ -215,7 +280,7 @@
   },
   {
     "kind": "struct",
-    "name": "/home/gil/workspace/catering/src::registration::EventChanged",
+    "name": "event_manager::registration::EventChanged",
     "type": "event",
     "members": [
       {
@@ -232,7 +297,7 @@
   },
   {
     "kind": "struct",
-    "name": "/home/gil/workspace/catering/src::registration::EventCancellation",
+    "name": "event_manager::registration::EventCancellation",
     "type": "event",
     "members": [
       {
@@ -249,7 +314,7 @@
   },
   {
     "kind": "struct",
-    "name": "/home/gil/workspace/catering/src::registration::AcquireTokens",
+    "name": "event_manager::registration::AcquireTokens",
     "type": "event",
     "members": [
       {
@@ -271,7 +336,7 @@
   },
   {
     "kind": "struct",
-    "name": "/home/gil/workspace/catering/src::registration::UserAllowed",
+    "name": "event_manager::registration::UserAllowed",
     "type": "event",
     "members": [
       {
@@ -288,33 +353,33 @@
   },
   {
     "kind": "enum",
-    "name": "/home/gil/workspace/catering/src::registration::Event",
+    "name": "event_manager::registration::Event",
     "type": "event",
     "variants": [
       {
         "kind": "nested",
         "name": "UserRegistration",
-        "type": "/home/gil/workspace/catering/src::registration::UserRegistration"
+        "type": "event_manager::registration::UserRegistration"
       },
       {
         "kind": "nested",
         "name": "EventChanged",
-        "type": "/home/gil/workspace/catering/src::registration::EventChanged"
+        "type": "event_manager::registration::EventChanged"
       },
       {
         "kind": "nested",
         "name": "EventCancellation",
-        "type": "/home/gil/workspace/catering/src::registration::EventCancellation"
+        "type": "event_manager::registration::EventCancellation"
       },
       {
         "kind": "nested",
         "name": "AcquireTokens",
-        "type": "/home/gil/workspace/catering/src::registration::AcquireTokens"
+        "type": "event_manager::registration::AcquireTokens"
       },
       {
         "kind": "nested",
         "name": "UserAllowed",
-        "type": "/home/gil/workspace/catering/src::registration::UserAllowed"
+        "type": "event_manager::registration::UserAllowed"
       }
     ]
   }

@@ -4,16 +4,16 @@
   "version": "0.0.1",
   "type": "module",
   "scripts": {
-    "dev:foodiez": "pnpm --filter @catering-app/foodiez dev",
-    "build:foodiez": "pnpm --filter @catering-app/foodiez build",
-    "preview:foodiez": "pnpm --filter @catering-app/foodiez preview",
-    "deploy:foodiez": "pnpm --filter @catering-app/foodiez run deploy"
+    "dev:starkitchen": "pnpm --filter @catering-app/starkitchen dev",
+    "build:starkitchen": "pnpm --filter @catering-app/starkitchen build",
+    "preview:starkitchen": "pnpm --filter @catering-app/starkitchen preview",
+    "deploy:starkitchen": "pnpm --filter @catering-app/starkitchen run deploy"
   },
   "engines": {
     "node": ">=20.0.0"
   },
   "workspaces": [
     "packages/contracts",
-    "apps/foodiez"
+    "apps/starkitchen"
   ]
 }
