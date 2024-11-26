@@ -12,7 +12,7 @@ export const StarkitchenApp = () => {
   const {setShowAuthFlow} = useDynamicContext();
   const [activeTab, setActiveTab] = useState<string>(AppTabs.UPCOMING_MEALS);
   const wallets = useUserWallets();
-  const {pastMeals, futureMeals, isAllowedUser, updateMeal} = useMealEvents();
+  const {pastMeals, futureMeals, isAllowedUser, loading, updateMeal} = useMealEvents();
 
   const starknetWallet = wallets.find(wallet => wallet.chain === 'STARK');
 
@@ -40,6 +40,7 @@ export const StarkitchenApp = () => {
         <TabsContent value={AppTabs.UPCOMING_MEALS} className="space-y-12">
           <UpcomingMealsTab
             updateMeal={updateMeal}
+            loading={loading}
             isAllowedUser={isAllowedUser}
             meals={futureMeals}
             address={starknetWallet?.address} 

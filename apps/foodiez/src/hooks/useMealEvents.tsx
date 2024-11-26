@@ -1,13 +1,15 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { ReadCateringContract } from "../providers/starknet-provider";
-import { useUserWallets } from "@dynamic-labs/sdk-react-core";
+import { useDynamicContext, useUserWallets } from "@dynamic-labs/sdk-react-core";
 import { Meal } from "../types/meal";
 import { getStartMonthOfEventTracking, getTimestampForFirstDayOfMonth } from "../utils/date";
 
 export const useMealEvents = () => {
   const [mealEvents, setMealEvents] = useState<Meal[]>([]);
   const [isAllowedUser, setIsAllowedUser] = useState<boolean>();
+  const [loading, setLoading] = useState(true);
   const wallets = useUserWallets();
+  const {sdkHasLoaded} = useDynamicContext();
   
   const starknetWallet = useMemo(() => wallets.find(wallet => wallet.chain === 'STARK'), [wallets]);
   
@@ -33,13 +35,16 @@ export const useMealEvents = () => {
 
       setIsAllowedUser(isAllowedUserData);
       setMealEvents(mealEventsData);
+      setLoading(false);
     }
 
-    fetchContractData();
-  }, []);
+    if (sdkHasLoaded) {
+      fetchContractData();
+    }
+  }, [starknetWallet?.address, sdkHasLoaded]);
 
   const futureMeals: Meal[] = mealEvents.filter((mealEvent) => Number(mealEvent.time.seconds) * 1000 > Date.now());
   const pastMeals = mealEvents.filter((mealEvent) => Number(mealEvent.time.seconds) * 1000 <= Date.now());;
 
-  return {pastMeals, futureMeals, isAllowedUser, updateMeal};
+  return {pastMeals, futureMeals, isAllowedUser, loading, updateMeal};
 }

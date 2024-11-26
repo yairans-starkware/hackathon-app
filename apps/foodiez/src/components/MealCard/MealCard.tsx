@@ -15,6 +15,7 @@ export const MealCard = ({
   isAllowedUser = false,
   isNextMeal = false 
 }: { 
+  loading?: boolean,
   meal: Meal,
   isPastMeal?: boolean; 
   isWalletConnected?: boolean,
@@ -24,7 +25,7 @@ export const MealCard = ({
   isNextMeal?: boolean 
 }) => {
   const contract = useCateringContract();
-  
+
   const formatDate = (date: Date) => {
     return date.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })
   }
