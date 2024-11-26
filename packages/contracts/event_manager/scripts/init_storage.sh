@@ -19,7 +19,7 @@ SECONDS_IN_WEEK=60*60*24*7
 PRICE=10
 for i in {0..52}
 do
-  starkli invoke $CONTRACT_ADDRESS add_event $((BASE_TIME + i * SECONDS_IN_WEEK)) $PRICE && sleep 10
-  starkli invoke $CONTRACT_ADDRESS add_event $((BASE_TIME + i * SECONDS_IN_WEEK + SECONDS_IN_DAY)) $PRICE && sleep 10
-  starkli invoke $CONTRACT_ADDRESS add_event $((BASE_TIME + i * SECONDS_IN_WEEK + 2 * SECONDS_IN_DAY)) $PRICE && sleep 10
+  starkli invoke $CONTRACT_ADDRESS add_event $((BASE_TIME + i * SECONDS_IN_WEEK)) && sleep 10
+  starkli invoke $CONTRACT_ADDRESS add_event $((BASE_TIME + i * SECONDS_IN_WEEK + SECONDS_IN_DAY)) && sleep 10
+  starkli invoke $CONTRACT_ADDRESS add_event $((BASE_TIME + i * SECONDS_IN_WEEK + 2 * SECONDS_IN_DAY)) && sleep 10
 done
