@@ -10,9 +10,6 @@ use crate::utils::time::Time;
 struct EventInfo {
     /// The time of the event, as a Unix timestamp.
     time: Time,
-    /// The price of the event.
-    // TODO: Can the price be modified?
-    price: u32,
     /// The number of users registered to the event.
     number_of_participants: u32,
 }
@@ -52,13 +49,9 @@ trait IRegistration<T> {
     /// Unregisters a user from an event. The user id is the caller address of the transaction.
     fn unregister(ref self: T, event_id: felt252);
 
-    /// Acquires tokens for the caller. The caller must be an allowed user.
-    fn acquire_tokens(ref self: T, amount: u32);
-    /// Returns the balance of the user.
-    fn balanceOf(self: @T, user: ContractAddress) -> u32;
 
     /// Adds an event to the contract.
-    fn add_event(ref self: T, time: felt252, price: u32);
+    fn add_event(ref self: T, time: felt252);
     /// Modifies the time of an event.
     fn modify_event_time(ref self: T, event_id: felt252, time: felt252);
     /// Sets whether an event is canceled.
@@ -69,6 +62,8 @@ trait IRegistration<T> {
     fn remove_allowed_user(ref self: T, user: ContractAddress);
     /// Adds a list of users to the set of allowed users.
     fn add_allowed_users(ref self: T, users: Span<ContractAddress>);
+    /// Returns if a user is allowed to register to events.
+    fn is_allowed_user(self: @T, user: ContractAddress) -> bool;
 
     /// Checks whether the user is an admin.
     fn is_admin(self: @T, user: ContractAddress) -> bool;
@@ -103,9 +98,7 @@ mod registration {
         events_by_day: Map<u64, Vec<felt252>>,
         /// The number of events in the contract.
         n_events: usize,
-        /// A map from user to their token balance.
-        balance: Map<ContractAddress, u32>,
-        /// The set of users who may request tokens.
+        /// The set of users who may register to events.
         allowed_users: Map<ContractAddress, bool>,
         /// A map from event_id to a map from user to whether the user is registered to the event.
         is_registered_to_event: Map<(felt252, ContractAddress), bool>,
@@ -120,7 +113,6 @@ mod registration {
         UserRegistration: UserRegistration,
         EventChanged: EventChanged,
         EventCancellation: EventCancellation,
-        AcquireTokens: AcquireTokens,
         UserAllowed: UserAllowed,
     }
 
@@ -146,13 +138,6 @@ mod registration {
     }
 
     #[derive(Drop, starknet::Event)]
-    struct AcquireTokens {
-        user: ContractAddress,
-        amount: u32,
-        new_balance: u32,
-    }
-
-    #[derive(Drop, starknet::Event)]
     struct UserAllowed {
         user: ContractAddress,
         allowed: bool,
@@ -165,15 +150,13 @@ mod registration {
 
     #[generate_trait]
     impl PrivateFunctionsImpl of PrivateFunctions {
-        fn _add_event(ref self: ContractState, time: felt252, price: u32) {
+        fn _add_event(ref self: ContractState, time: felt252) {
             let n_events_ptr = self.n_events.as_ptr();
             let n_events = n_events_ptr.read();
             let time = TimeTrait::new(time.try_into().expect('Invalid time'));
             let event_id = n_events + 1;
             let event_day = time.day();
-            self
-                .events
-                .write(n_events.into(), EventInfo { time, price, number_of_participants: 0 });
+            self.events.write(n_events.into(), EventInfo { time, number_of_participants: 0 });
             n_events_ptr.write(event_id);
             self.events_by_day.entry(event_day).append().write(event_id.into());
 
@@ -307,9 +290,9 @@ mod registration {
             events
         }
 
-        fn add_event(ref self: ContractState, time: felt252, price: u32) {
+        fn add_event(ref self: ContractState, time: felt252) {
             // TODO: Check owner.
-            self._add_event(time, price);
+            self._add_event(time);
         }
 
         fn modify_event_time(ref self: ContractState, event_id: felt252, time: felt252) {
@@ -348,43 +331,23 @@ mod registration {
             }
         }
 
+        fn is_allowed_user(self: @ContractState, user: ContractAddress) -> bool {
+            self.allowed_users.read(user)
+        }
+
         fn register(ref self: ContractState, event_id: felt252) {
             let user = starknet::get_caller_address();
 
-            // Check and update balance.
-            let current_balance = self.balance.read(user);
-            assert(current_balance >= 1, 'Insufficient balance.');
-            self.balance.write(user, current_balance - 1);
-
+            // Check that the user is allowed to register to events.
+            assert(self.is_allowed_user(user), 'User not allowed to register.');
             self._register_user_to_event(:event_id, :user);
         }
 
         fn unregister(ref self: ContractState, event_id: felt252) {
             let user = starknet::get_caller_address();
             self._unregister_user_from_event(:event_id, :user);
-
-            let current_balance = self.balance.read(user);
-            // In this case we don't check that balance is not too high.
-            self.balance.write(user, current_balance + 1);
         }
 
-        fn acquire_tokens(ref self: ContractState, amount: u32) {
-            let user = starknet::get_caller_address();
-
-            assert(self.allowed_users.read(user), 'User not registered.');
-
-            let current_balance = self.balance.read(user);
-            let new_balance = current_balance + amount;
-            // TODO: Check + check overflow.
-            assert(new_balance <= 12, 'balance exceeds 12 tokens.');
-            self.balance.write(user, new_balance);
-
-            self.emit(AcquireTokens { user, amount, new_balance });
-        }
-
-        fn balanceOf(self: @ContractState, user: ContractAddress) -> u32 {
-            self.balance.read(user)
-        }
 
         fn is_admin(self: @ContractState, user: ContractAddress) -> bool {
             self.admins.read(user)
