@@ -1,0 +1,1 @@
+export const SrcPrefix = import.meta.env.MODE === 'production' ? '/catering_app' : ''

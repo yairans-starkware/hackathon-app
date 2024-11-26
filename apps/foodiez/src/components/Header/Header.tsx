@@ -3,6 +3,7 @@ import { Button } from "../ui/button"
 import { useDynamicContext, Wallet } from "@dynamic-labs/sdk-react-core";
 import { DisconnectWalletDialog } from "../Dialogs/DisconnectWalletDialog";
 import { useCallback, useState } from "react";
+import { SrcPrefix } from "../../utils/consts";
 
 const truncateAddress = (address: string) => {
   return `${address.slice(0, 6)}...${address.slice(-4)}`
@@ -32,13 +33,13 @@ export const Header = ({
   const openDisconnectDialog = () => {
     setIsDisconnectDialogOpen(true);
   }
-  
+
   return (
     <header className="bg-white shadow">
         <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 py-4">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <div className="flex items-center space-x-4 mb-4 md:mb-0">
-              <img src={`/starkitchen-logo-transparent.png`} alt="StarKitchen Logo" className="h-12" />
+              <img src={`${SrcPrefix}/starkitchen-logo-transparent.png`} alt="StarKitchen Logo" className="h-12" />
               <h1 className="text-3xl font-bold text-gray-900">StarKitchen</h1>
             </div>
             <div className="flex items-center space-x-4">
