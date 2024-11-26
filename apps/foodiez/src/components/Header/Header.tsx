@@ -10,12 +10,10 @@ const truncateAddress = (address: string) => {
 
 export const Header = ({
   isConnected, 
-  balance, 
   onConnectWallet,
   wallet,
 }: {
   isConnected: boolean;
-  balance?: number;
   onConnectWallet: () => void;
   wallet?: Wallet<any>,
 }) => {
@@ -37,31 +35,36 @@ export const Header = ({
   
   return (
     <header className="bg-white shadow">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
-        <div className="flex items-center space-x-4">
-          <img src={`/starkitchen-logo-transparent.png`} alt="StarKitchen Logo" className="h-12" />
-          <h1 className="text-3xl font-bold text-gray-900">StarKitchen</h1>
-        </div>
-          <div className="flex items-center space-x-4">
-              {isConnected ? (
-              <>
-                <span className="text-sm font-medium text-gray-500">
-                  Balance: {balance} CAT
-                </span>
-                <span className="text-sm font-medium text-gray-500">
-                  {truncateAddress(wallet?.address ?? '')}
-                </span>
-                <Button variant="ghost" size="icon" onClick={openDisconnectDialog}>
-                  <LogOut className="h-4 w-4" />
-                  <span className="sr-only">Disconnect wallet</span>
+        <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 py-4">
+          <div className="flex flex-col md:flex-row justify-between items-center">
+            <div className="flex items-center space-x-4 mb-4 md:mb-0">
+              <img src={`/starkitchen-logo-transparent.png`} alt="StarKitchen Logo" className="h-12" />
+              <h1 className="text-3xl font-bold text-gray-900">StarKitchen</h1>
+            </div>
+            <div className="flex items-center space-x-4">
+                {isConnected ? (
+                <div className="flex flex-col md:flex-row items-center space-y-2 md:space-y-0 md:space-x-4">
+                  <span className="text-sm font-medium text-gray-500">
+                    Meals Attended This Month: 3
+                  </span>
+                  <span className="text-sm font-medium text-gray-500">
+                    Foodie Position: 1
+                  </span>
+                  <span className="text-sm font-medium text-gray-500">
+                    {truncateAddress(wallet?.address ?? '')}
+                  </span>
+                  <Button variant="ghost" size="sm" onClick={openDisconnectDialog}>
+                    <LogOut className="h-4 w-4" />
+                    <span>Disconnect wallet</span>
+                  </Button>
+                </div>
+              ) : (
+                <Button onClick={onConnectWallet}>
+                  <WalletIcon className="mr-2 h-4 w-4" />
+                  Connect Wallet
                 </Button>
-              </>
-            ) : (
-              <Button onClick={onConnectWallet}>
-                <WalletIcon className="mr-2 h-4 w-4" />
-                Connect Wallet
-              </Button>
-            )}
+              )}
+            </div>
           </div>
         </div>
         <DisconnectWalletDialog onDisconnect={disconnect} open={isDisconnectDialogOpen} onClose={handleCloseDisconnectDialog} />

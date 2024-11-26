@@ -20,7 +20,7 @@ export const DisconnectWalletDialog = ({
 }) => {
   return (
     <AlertDialog open={open} onOpenChange={onClose}>
-        <AlertDialogContent>
+        <AlertDialogContent className="max-w-[300px] sm:max-w-[400px]">
           <AlertDialogHeader>
             <AlertDialogTitle>Disconnect Wallet</AlertDialogTitle>
             <AlertDialogDescription>

@@ -1,17 +1,16 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { ReadCateringContract } from "../providers/starknet-provider";
 import { useUserWallets } from "@dynamic-labs/sdk-react-core";
 import { Meal } from "../types/meal";
-import { useCateringContract } from "./useCateringContract";
+import { getStartMonthOfEventTracking, getTimestampForFirstDayOfMonth } from "../utils/date";
 
 export const useMealEvents = () => {
   const [mealEvents, setMealEvents] = useState<Meal[]>([]);
-  const [balance, setBalance] = useState<number>();
+  const [isAllowedUser, setIsAllowedUser] = useState<boolean>();
   const wallets = useUserWallets();
-  const starknetWallet = wallets.find(wallet => wallet.chain === 'STARK');
-  const contract = useCateringContract();
-
-  console.log('@@@@@@mealEvents', mealEvents);
+  
+  const starknetWallet = useMemo(() => wallets.find(wallet => wallet.chain === 'STARK'), [wallets]);
+  
   const updateMeal = useCallback((mealId: string) => {
     const indexOfUpdatedMeal = mealEvents.map((meal) => meal.id).indexOf(mealId);
     const oldMeal = mealEvents[indexOfUpdatedMeal];
@@ -20,33 +19,27 @@ export const useMealEvents = () => {
       registered: !oldMeal.registered,
     }
 
-    setBalance(oldMeal.registered ? balance! + 1 : balance! - 1);
     setMealEvents([...mealEvents.slice(0, indexOfUpdatedMeal), newMeal, ...mealEvents.slice(indexOfUpdatedMeal + 1)]);
-  }, [mealEvents, balance]);
-
+  }, [mealEvents]);
+  
   useEffect(() => {
-    const setWalletBalance = async () => {
-      const walletBalance = Number((await ReadCateringContract?.balanceOf(starknetWallet?.address)));
-      setBalance(walletBalance);
+    const fetchContractData = async () => {
+      const aYearAgoTimestampSeconds = getTimestampForFirstDayOfMonth(getStartMonthOfEventTracking());
+      const aMonthFromNowTimestampSeconds = Math.floor(Date.now() / 1000) + 30 * 24 * 60 * 60;
+      const [isAllowedUserData, mealEventsData] = await Promise.all([
+        starknetWallet?.address ? ReadCateringContract?.is_allowed_user(starknetWallet?.address) : Promise.resolve(false),
+        ReadCateringContract.events_infos_by_time({seconds: aYearAgoTimestampSeconds},{ seconds: aMonthFromNowTimestampSeconds })
+      ])
+
+      setIsAllowedUser(isAllowedUserData);
+      setMealEvents(mealEventsData);
     }
 
-    if (starknetWallet && contract) {
-      setWalletBalance();
-    }
-  }, [starknetWallet, contract])
+    fetchContractData();
+  }, []);
 
-  useEffect(() => {
-    const eventData = async () => {
-      const eventCount = await ReadCateringContract.n_events();
-      const events = await ReadCateringContract?.get_user_evernts(starknetWallet?.address, eventCount.toString())
-      setMealEvents(events)
-    }
+  const futureMeals: Meal[] = mealEvents.filter((mealEvent) => Number(mealEvent.time.seconds) * 1000 > Date.now());
+  const pastMeals = mealEvents.filter((mealEvent) => Number(mealEvent.time.seconds) * 1000 <= Date.now());;
 
-    eventData();
-  }, [starknetWallet?.address]);
-
-  const futureMeals: Meal[] = mealEvents.filter((mealEvent) => mealEvent.time > Date.now());
-  const pastMeals = mealEvents.filter((mealEvent) => mealEvent.time <= Date.now());;
-
-  return {pastMeals, futureMeals, balance, updateMeal, setBalance};
+  return {pastMeals, futureMeals, isAllowedUser, updateMeal};
 }

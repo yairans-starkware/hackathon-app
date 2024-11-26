@@ -1,6 +1,7 @@
 export type Meal = {
   id: string;
-  time: number;
-  registered: boolean;
-  canceled: boolean;
+  time: {seconds: number};
+  number_of_participants: number;
+  registered?: boolean;
+  canceled?: boolean;
 }

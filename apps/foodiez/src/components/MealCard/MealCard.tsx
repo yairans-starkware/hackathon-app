@@ -12,7 +12,7 @@ export const MealCard = ({
   updateMeal,
   isPastMeal = false,
   isWalletConnected = false,
-  canAfford = false,
+  isAllowedUser = false,
   isNextMeal = false 
 }: { 
   meal: Meal,
@@ -20,7 +20,7 @@ export const MealCard = ({
   isWalletConnected?: boolean,
   connect?: () => void,
   updateMeal?: (mealId: string) => void,
-  canAfford?: boolean,
+  isAllowedUser?: boolean,
   isNextMeal?: boolean 
 }) => {
   const contract = useCateringContract();
@@ -37,7 +37,7 @@ export const MealCard = ({
         const {transaction_hash} = await contract?.unregister(meal.id);
         await contract?.providerOrAccount?.waitForTransaction(transaction_hash, { retryInterval: 1e3 });
         updateMeal?.(meal.id);
-      } else if (canAfford) {
+      } else if (isAllowedUser) {
         closeFullscreenLoader = openFullscreenLoader('Booking you up...');
         const {transaction_hash} = await contract?.register(meal.id);
         await contract?.providerOrAccount?.waitForTransaction(transaction_hash, { retryInterval: 1e3 });
@@ -63,12 +63,11 @@ export const MealCard = ({
       </CardTitle>
     </CardHeader>
     <CardContent>
-      <p className="text-2xl font-semibold">{formatDate(new Date(Number(meal.time)))}</p>
-      <p className="text-xl text-gray-500">1 CAT</p>
-      {isWalletConnected && !canAfford && !meal.registered ? (
+      <p className="text-2xl font-semibold">{formatDate(new Date(Number(meal.time.seconds) * 1000))}</p>
+      {isWalletConnected && !isAllowedUser && !meal.registered ? (
         <div className="flex items-center mt-2 text-red-500">
           <AlertCircle className="w-4 h-4 mr-2" />
-          <span className="text-sm">Insufficient balance</span>
+          <span className="text-sm">You're not allowed to register to meals, yet!</span>
         </div>
       ) : null}
     </CardContent>
@@ -78,7 +77,7 @@ export const MealCard = ({
         <Button 
           className="w-full" 
           onClick={handleRegistration}
-          disabled={isWalletConnected && !canAfford && !meal.registered}
+          disabled={isWalletConnected && !isAllowedUser && !meal.registered}
         >
           {meal.registered ? (
             <>
