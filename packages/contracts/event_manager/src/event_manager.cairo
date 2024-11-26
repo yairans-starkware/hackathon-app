@@ -159,8 +159,8 @@ mod registration {
     }
 
     #[constructor]
-    fn constructor(ref self: ContractState) {
-        self.admins.write(starknet::get_caller_address(), true);
+    fn constructor(ref self: ContractState, admin: ContractAddress) {
+        self.admins.write(admin, true);
     }
 
     #[generate_trait]
