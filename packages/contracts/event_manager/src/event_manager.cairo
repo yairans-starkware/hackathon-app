@@ -6,12 +6,23 @@ use crate::utils::time::Time;
 
 
 /// Basic information about an event.
+// TODO: Consider adding a name and description.
 #[derive(Drop, Serde, starknet::Store)]
 struct EventInfo {
     /// The time of the event, as a Unix timestamp.
     time: Time,
     /// The number of users registered to the event.
     number_of_participants: usize,
+}
+
+#[derive(Drop, Serde)]
+struct ExtededEventInfo {
+    /// The time of the event, as a Unix timestamp.
+    time: Time,
+    /// The users registered to the event.
+    participants: Array<ContractAddress>,
+    /// Whether the event has been canceled.
+    canceled: bool,
 }
 
 /// Information about a user's registration to an event.
@@ -68,6 +79,11 @@ trait IRegistration<T> {
     /// Gets the number of events in the contract.
     // TODO: Consider removing this function.
     fn n_events(self: @T) -> usize;
+    /// Returns the extended information of all the events within a time range. The range is
+    /// [start, end).
+    fn get_participation_report_by_time(
+        self: @T, start: Time, end: Time
+    ) -> Array<ExtededEventInfo>;
 
     /// Gets the information of an event. Time will be 0 if the event does not exist.
     fn event_info(self: @T, event_id: usize) -> EventInfo;
@@ -114,7 +130,7 @@ mod registration {
     use starknet::storage::StoragePointerWriteAccess;
     use starknet::storage::StoragePointerReadAccess;
     use starknet::storage::StorageMapWriteAccess;
-    use super::{EventInfo, EventUserInfo, RegistrationStatus};
+    use super::{EventInfo, EventUserInfo, RegistrationStatus, ExtededEventInfo};
     use starknet::ContractAddress;
     use starknet::storage::{Map, Vec};
 
@@ -122,6 +138,9 @@ mod registration {
     struct Storage {
         /// A map from event ID to event information.
         events: Map<usize, EventInfo>,
+        /// A map from event ID to the users registered to the event. Users who unregistered are
+        /// also included, and should be filtered out when needed.
+        registered_users: Map<usize, Vec<ContractAddress>>,
         /// A map from event ID to whether the event has been canceled.
         event_canceled: Map<usize, bool>,
         /// A simple data structure to allow lookup of events by time. The key is the day of the
@@ -217,16 +236,19 @@ mod registration {
             ref self: ContractState, event_id: usize, user: ContractAddress
         ) {
             self._check_not_canceled(event_id);
-            assert(
-                !self.registration_status.read((event_id, user)).is_registered(),
-                'User already registered.'
-            );
-            self.registration_status.write((event_id, user), RegistrationStatus::Registered);
             // TODO: Explain why we need to use a pointer here.
+            let registration_status_ptr = self.registration_status.entry((event_id, user));
+            let prev_status = registration_status_ptr.read();
+            assert(!prev_status.is_registered(), 'User already registered.');
+            self.registration_status.write((event_id, user), RegistrationStatus::Registered);
             let n_participants_ptr = self.events.entry(event_id).number_of_participants;
             let n_participants = n_participants_ptr.read();
             n_participants_ptr.write(n_participants + 1);
-
+            // Add the user to the list of registered users, unless they have already interacted
+            // with the event and are already in the list.
+            if !prev_status.has_interacted() {
+                self.registered_users.entry(event_id).append().write(user);
+            }
             self.emit(UserRegistration { user, event_id, status: true });
         }
 
@@ -238,17 +260,32 @@ mod registration {
             // let event_time: u256 = self.events.read(event_id).time.into();
             // assert(event_time < starknet::get_block_timestamp().into(), 'Event already
             // started.');
-            assert(
-                self.registration_status.read((event_id, user)).is_registered(),
-                'User not registered.'
-            );
-            self.registration_status.write((event_id, user), RegistrationStatus::Unregistered);
+            let registration_status_ptr = self.registration_status.entry((event_id, user));
+            assert(registration_status_ptr.read().is_registered(), 'User not registered.');
+            registration_status_ptr.write(RegistrationStatus::Unregistered);
 
             let n_participants_ptr = self.events.entry(event_id).number_of_participants;
             let n_participants = n_participants_ptr.read();
             n_participants_ptr.write(n_participants - 1);
 
             self.emit(UserRegistration { user, event_id, status: false });
+        }
+
+        fn _get_event_extended_info(self: @ContractState, event_id: usize) -> ExtededEventInfo {
+            let event = self.events.read(event_id);
+            let mut participants = ArrayTrait::new();
+            let event_participants_vec = self.registered_users.entry(event_id);
+            let n_registered = event_participants_vec.len();
+            #[cairofmt::skip]
+            for i in 0..n_registered {
+                let user_address = event_participants_vec.at(i).read();
+                let user_status = self.registration_status.read((event_id, user_address));
+                if user_status.is_registered() {
+                    participants.append(user_address);
+                }
+            };
+            let canceled = self.event_canceled.read(event_id);
+            ExtededEventInfo { time: event.time, participants, canceled }
         }
     }
 
@@ -291,6 +328,28 @@ mod registration {
 
         fn n_events(self: @ContractState) -> usize {
             self.n_events.read()
+        }
+
+        fn get_participation_report_by_time(
+            self: @ContractState, start: Time, end: Time
+        ) -> Array<ExtededEventInfo> {
+            let mut events = ArrayTrait::new();
+            let start_day = start.day();
+            let end_day = end.day();
+            // Formatting of for loops with ranges is bad in this version of Cairo.
+            #[cairofmt::skip]
+            for day in start_day..end_day {
+                let cur_day_events = self.events_by_day.entry(day);
+                let n_events_in_day = cur_day_events.len();
+                for i in 0..n_events_in_day {
+                    let event_id = cur_day_events.at(i).read();
+                    let event = self.events.read(event_id);
+                    if event.time >= start && event.time < end {
+                        events.append(self._get_event_extended_info(event_id));
+                    }
+                }
+            };
+            events
         }
 
         fn event_info(self: @ContractState, event_id: usize) -> EventInfo {
