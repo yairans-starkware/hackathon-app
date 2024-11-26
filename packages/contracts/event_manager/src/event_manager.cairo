@@ -11,7 +11,7 @@ struct EventInfo {
     /// The time of the event, as a Unix timestamp.
     time: Time,
     /// The number of users registered to the event.
-    number_of_participants: u32,
+    number_of_participants: usize,
 }
 
 /// Information about a user's registration to an event.
@@ -29,33 +29,32 @@ struct EventUserInfo {
 
 #[starknet::interface]
 trait IRegistration<T> {
-    /// Returns information about the events the user is registered to. max_n_events is the maximum
-    /// number of events to return.
-    fn get_user_events(
-        self: @T, user: ContractAddress, max_n_events: usize
+    /// Returns information about the events the user is registered to, within a time range. The
+    /// range is [start, end).
+    fn get_user_events_by_time(
+        self: @T, user: ContractAddress, start: Time, end: Time
     ) -> Array<EventUserInfo>;
-
     /// Gets the number of events in the contract.
+    // TODO: Consider removing this function.
     fn n_events(self: @T) -> usize;
 
     /// Gets the information of an event. Time will be 0 if the event does not exist.
-    fn event_info(self: @T, event_id: felt252) -> EventInfo;
-    /// Gets the information of a range of events by their IDs. The range is [start, end).
-    fn events_infos_by_id(self: @T, start: usize, end: usize) -> Array<EventInfo>;
+    fn event_info(self: @T, event_id: usize) -> EventInfo;
     /// Gets the information of a range of events by their times. The range is [start, end).
-    fn events_infos_by_time(self: @T, start: Time, end: Time) -> Array<EventInfo>;
-    /// Registers a user to an event. The user id is the caller address of the transaction.
-    fn register(ref self: T, event_id: felt252);
-    /// Unregisters a user from an event. The user id is the caller address of the transaction.
-    fn unregister(ref self: T, event_id: felt252);
+    fn get_events_infos_by_time(self: @T, start: Time, end: Time) -> Array<EventInfo>;
 
+    /// Registers a user to an event. The user id is the caller address of the transaction.
+    fn register(ref self: T, event_id: usize);
+    /// Unregisters a user from an event. The user id is the caller address of the transaction.
+    fn unregister(ref self: T, event_id: usize);
 
     /// Adds an event to the contract.
     fn add_event(ref self: T, time: felt252);
     /// Modifies the time of an event.
-    fn modify_event_time(ref self: T, event_id: felt252, time: felt252);
+    fn modify_event_time(ref self: T, event_id: usize, time: felt252);
     /// Sets whether an event is canceled.
-    fn set_event_canceled(ref self: T, event_id: felt252, canceled: bool);
+    fn set_event_canceled(ref self: T, event_id: usize, canceled: bool);
+
     /// Adds a user to the set of allowed users.
     fn add_allowed_user(ref self: T, user: ContractAddress);
     /// Removes a user from the set of allowed users.
@@ -90,18 +89,18 @@ mod registration {
     #[storage]
     struct Storage {
         /// A map from event ID to event information.
-        events: Map<felt252, EventInfo>,
+        events: Map<usize, EventInfo>,
         /// A map from event ID to whether the event has been canceled.
-        event_canceled: Map<felt252, bool>,
+        event_canceled: Map<usize, bool>,
         /// A simple data structure to allow lookup of events by time. The key is the day of the
         /// event, and the value is a vector of event IDs.
-        events_by_day: Map<u64, Vec<felt252>>,
+        events_by_day: Map<u64, Vec<usize>>,
         /// The number of events in the contract.
         n_events: usize,
         /// The set of users who may register to events.
         allowed_users: Map<ContractAddress, bool>,
         /// A map from event_id to a map from user to whether the user is registered to the event.
-        is_registered_to_event: Map<(felt252, ContractAddress), bool>,
+        is_registered_to_event: Map<(usize, ContractAddress), bool>,
         /// A set of admins.
         // TODO: Use Roles component.
         admins: Map<ContractAddress, bool>,
@@ -121,19 +120,19 @@ mod registration {
         #[key]
         user: ContractAddress,
         #[key]
-        event_id: felt252,
+        event_id: usize,
         status: bool,
     }
 
     #[derive(Drop, starknet::Event)]
     struct EventChanged {
-        event_id: felt252,
+        event_id: usize,
         time: Time,
     }
 
     #[derive(Drop, starknet::Event)]
     struct EventCancellation {
-        event_id: felt252,
+        event_id: usize,
         canceled: bool,
     }
 
@@ -163,7 +162,7 @@ mod registration {
             self.emit(EventChanged { event_id: n_events.into(), time });
         }
 
-        fn _modify_event_time(ref self: ContractState, event_id: felt252, time: felt252) {
+        fn _modify_event_time(ref self: ContractState, event_id: usize, time: felt252) {
             self._check_event_exists(event_id);
             // TODO: Check not cancelled.
 
@@ -173,20 +172,17 @@ mod registration {
             self.emit(EventChanged { event_id, time });
         }
 
-        fn _check_event_exists(self: @ContractState, event_id: felt252) {
-            assert(
-                event_id.try_into().expect('Invalid event_id') < self.n_events.read(),
-                'Event does not exist.'
-            );
+        fn _check_event_exists(self: @ContractState, event_id: usize) {
+            assert(event_id < self.n_events.read(), 'Event does not exist.');
         }
 
-        fn _check_not_canceled(self: @ContractState, event_id: felt252) {
+        fn _check_not_canceled(self: @ContractState, event_id: usize) {
             self._check_event_exists(event_id);
             assert(!self.event_canceled.read(event_id), 'Event canceled.');
         }
 
         fn _register_user_to_event(
-            ref self: ContractState, event_id: felt252, user: ContractAddress
+            ref self: ContractState, event_id: usize, user: ContractAddress
         ) {
             self._check_not_canceled(event_id);
             assert(!self.is_registered_to_event.read((event_id, user)), 'User already registered.');
@@ -200,7 +196,7 @@ mod registration {
         }
 
         fn _unregister_user_from_event(
-            ref self: ContractState, event_id: felt252, user: ContractAddress
+            ref self: ContractState, event_id: usize, user: ContractAddress
         ) {
             self._check_event_exists(event_id);
             // let canceled = self.event_canceled.read(event_id);
@@ -220,34 +216,37 @@ mod registration {
 
     #[abi(embed_v0)]
     impl RegistrationImpl of super::IRegistration<ContractState> {
-        fn get_user_events(
-            self: @ContractState, user: ContractAddress, max_n_events: usize
+        fn get_user_events_by_time(
+            self: @ContractState, user: ContractAddress, start: Time, end: Time
         ) -> Array<EventUserInfo> {
             let mut events = ArrayTrait::new();
-            let total_n_events = self.n_events.read();
-
-            if (total_n_events == 0) {
-                return events;
-            }
-
-            let mut index = total_n_events;
-            let mut cnt = 0;
-
-            while index > 0 && cnt < max_n_events {
-                index -= 1;
-                let event = self.events.read(index.into());
-                let canceled = self.event_canceled.read(index.into());
-                let registered = self.is_registered_to_event.read((index.into(), user));
-
-                if canceled && !registered {
-                    continue;
+            let start_day = start.day();
+            let end_day = end.day();
+            // Formatting of for loops with ranges is bad in this version of Cairo.
+            #[cairofmt::skip]
+            for day in start_day..end_day {
+                let cur_day_events = self.events_by_day.entry(day);
+                let n_events_in_day = cur_day_events.len();
+                for i in 0..n_events_in_day {
+                    let event_id = cur_day_events.at(i).read();
+                    let registered = self.is_registered_to_event.read((event_id, user));
+                    if !registered {
+                        continue;
+                    }
+                    let event = self.events.read(event_id);
+                    let canceled = self.event_canceled.read(event_id);
+                    if event.time >= start && event.time < end {
+                        events
+                            .append(
+                                EventUserInfo {
+                                    id: event_id,
+                                    time: event.time,
+                                    registered,
+                                    canceled,
+                                }
+                            );
+                    }
                 }
-
-                let event_user_info = EventUserInfo {
-                    id: index, time: event.time, registered, canceled,
-                };
-                cnt += 1;
-                events.append(event_user_info);
             };
             events
         }
@@ -256,36 +255,28 @@ mod registration {
             self.n_events.read()
         }
 
-        fn event_info(self: @ContractState, event_id: felt252) -> EventInfo {
+        fn event_info(self: @ContractState, event_id: usize) -> EventInfo {
             self.events.read(event_id)
         }
 
-        fn events_infos_by_id(self: @ContractState, start: usize, end: usize) -> Array<EventInfo> {
-            let mut events = ArrayTrait::new();
-            for i in start..end {
-                events.append(self.events.read(i.into()));
-            };
-            events
-        }
-
-        fn events_infos_by_time(self: @ContractState, start: Time, end: Time) -> Array<EventInfo> {
+        fn get_events_infos_by_time(
+            self: @ContractState, start: Time, end: Time
+        ) -> Array<EventInfo> {
             let mut events = ArrayTrait::new();
             let start_day = start.day();
             let end_day = end.day();
-            // TODO: Add get_events_of_day, and check for time limits only in the first and last
-            // day.
-            for day in start_day
-                ..end_day {
+            // Formatting of for loops with ranges is bad in this version of Cairo.
+            #[cairofmt::skip]
+            for day in start_day..end_day {
                     let cur_day_events = self.events_by_day.entry(day);
                     let n_events_in_day = cur_day_events.len();
-                    for i in 0
-                        ..n_events_in_day {
-                            let event_id = cur_day_events.at(i).read();
-                            let event = self.events.read(event_id);
-                            if event.time >= start && event.time < end {
-                                events.append(event);
-                            }
+                    for i in 0..n_events_in_day {
+                        let event_id = cur_day_events.at(i).read();
+                        let event = self.events.read(event_id);
+                        if event.time >= start && event.time < end {
+                            events.append(event);
                         }
+                    }
                 };
             events
         }
@@ -295,12 +286,12 @@ mod registration {
             self._add_event(time);
         }
 
-        fn modify_event_time(ref self: ContractState, event_id: felt252, time: felt252) {
+        fn modify_event_time(ref self: ContractState, event_id: usize, time: felt252) {
             // TODO: Check owner.
             self._modify_event_time(event_id, time);
         }
 
-        fn set_event_canceled(ref self: ContractState, event_id: felt252, canceled: bool) {
+        fn set_event_canceled(ref self: ContractState, event_id: usize, canceled: bool) {
             // TODO: Check owner.
             self._check_event_exists(event_id);
             self.event_canceled.write(event_id, canceled);
@@ -335,7 +326,7 @@ mod registration {
             self.allowed_users.read(user)
         }
 
-        fn register(ref self: ContractState, event_id: felt252) {
+        fn register(ref self: ContractState, event_id: usize) {
             let user = starknet::get_caller_address();
 
             // Check that the user is allowed to register to events.
@@ -343,7 +334,7 @@ mod registration {
             self._register_user_to_event(:event_id, :user);
         }
 
-        fn unregister(ref self: ContractState, event_id: felt252) {
+        fn unregister(ref self: ContractState, event_id: usize) {
             let user = starknet::get_caller_address();
             self._unregister_user_from_event(:event_id, :user);
         }
