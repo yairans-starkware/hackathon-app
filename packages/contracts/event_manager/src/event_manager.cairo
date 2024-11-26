@@ -27,6 +27,37 @@ struct EventUserInfo {
     canceled: bool,
 }
 
+#[derive(Drop, Serde, starknet::Store)]
+enum RegistrationStatus {
+    /// The user is not registered to the event.
+    #[default]
+    NotRegistered,
+    /// The user is registered to the event.
+    Registered,
+    /// The user has registered to the event, and then unregistered. Used to prevent double
+    /// entries in the event user list.
+    Unregistered,
+}
+
+#[generate_trait]
+impl RegistrationStatusImpl of RegistrationStatusTrait {
+    /// Returns whether the user is registered to the event.
+    fn is_registered(self: @RegistrationStatus) -> bool {
+        match self {
+            RegistrationStatus::Registered => true,
+            _ => false,
+        }
+    }
+    /// Returns whether the user has interacted with the event (i.e. either registered or registered
+    /// and then unregistered).
+    fn has_interacted(self: @RegistrationStatus) -> bool {
+        match self {
+            RegistrationStatus::Registered | RegistrationStatus::Unregistered => true,
+            _ => false,
+        }
+    }
+}
+
 #[starknet::interface]
 trait IRegistration<T> {
     /// Returns information about the events the user is registered to, within a time range. The
@@ -72,6 +103,7 @@ trait IRegistration<T> {
 
 #[starknet::contract]
 mod registration {
+    use super::RegistrationStatusTrait;
     use super::IRegistration;
     use starknet::storage::VecTrait;
     use starknet::storage::MutableVecTrait;
@@ -82,7 +114,7 @@ mod registration {
     use starknet::storage::StoragePointerWriteAccess;
     use starknet::storage::StoragePointerReadAccess;
     use starknet::storage::StorageMapWriteAccess;
-    use super::{EventInfo, EventUserInfo};
+    use super::{EventInfo, EventUserInfo, RegistrationStatus};
     use starknet::ContractAddress;
     use starknet::storage::{Map, Vec};
 
@@ -100,7 +132,7 @@ mod registration {
         /// The set of users who may register to events.
         allowed_users: Map<ContractAddress, bool>,
         /// A map from event_id to a map from user to whether the user is registered to the event.
-        is_registered_to_event: Map<(usize, ContractAddress), bool>,
+        registration_status: Map<(usize, ContractAddress), RegistrationStatus>,
         /// A set of admins.
         // TODO: Use Roles component.
         admins: Map<ContractAddress, bool>,
@@ -185,8 +217,11 @@ mod registration {
             ref self: ContractState, event_id: usize, user: ContractAddress
         ) {
             self._check_not_canceled(event_id);
-            assert(!self.is_registered_to_event.read((event_id, user)), 'User already registered.');
-            self.is_registered_to_event.write((event_id, user), true);
+            assert(
+                !self.registration_status.read((event_id, user)).is_registered(),
+                'User already registered.'
+            );
+            self.registration_status.write((event_id, user), RegistrationStatus::Registered);
             // TODO: Explain why we need to use a pointer here.
             let n_participants_ptr = self.events.entry(event_id).number_of_participants;
             let n_participants = n_participants_ptr.read();
@@ -203,8 +238,11 @@ mod registration {
             // let event_time: u256 = self.events.read(event_id).time.into();
             // assert(event_time < starknet::get_block_timestamp().into(), 'Event already
             // started.');
-            assert(self.is_registered_to_event.read((event_id, user)), 'User not registered.');
-            self.is_registered_to_event.write((event_id, user), false);
+            assert(
+                self.registration_status.read((event_id, user)).is_registered(),
+                'User not registered.'
+            );
+            self.registration_status.write((event_id, user), RegistrationStatus::Unregistered);
 
             let n_participants_ptr = self.events.entry(event_id).number_of_participants;
             let n_participants = n_participants_ptr.read();
@@ -229,7 +267,7 @@ mod registration {
                 let n_events_in_day = cur_day_events.len();
                 for i in 0..n_events_in_day {
                     let event_id = cur_day_events.at(i).read();
-                    let registered = self.is_registered_to_event.read((event_id, user));
+                    let registered = self.registration_status.read((event_id, user)).is_registered();
                     if !registered {
                         continue;
                     }
