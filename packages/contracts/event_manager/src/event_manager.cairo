@@ -13,6 +13,8 @@ struct EventInfo {
     time: Time,
     /// The number of users registered to the event.
     number_of_participants: usize,
+    /// Is the event canceled.
+    canceled: bool,
 }
 
 /// Basic information about an event, to be returned when querying the contract.
@@ -36,6 +38,15 @@ struct ExtededEventInfo {
     participants: Array<ContractAddress>,
     /// Whether the event has been canceled.
     canceled: bool,
+}
+
+/// Information about a user's participation in events.
+#[derive(Drop, Serde)]
+struct UserParticipation {
+    /// The user's address.
+    user: ContractAddress,
+    /// Number of events the user has participated in.
+    n_participations: usize,
 }
 
 /// Information about a user's registration to an event.
@@ -97,7 +108,7 @@ trait IRegistration<T> {
     /// [start, end).
     fn get_participation_report_by_time(
         self: @T, start: Time, end: Time
-    ) -> Array<ExtededEventInfo>;
+    ) -> Array<UserParticipation>;
 
     /// Gets the information of an event. Time will be 0 if the event does not exist.
     fn event_info(self: @T, event_id: usize) -> EventInfo;
@@ -144,7 +155,11 @@ mod registration {
     use starknet::storage::StoragePointerWriteAccess;
     use starknet::storage::StoragePointerReadAccess;
     use starknet::storage::StorageMapWriteAccess;
-    use super::{EventInfo, EventUserInfo, RegistrationStatus, ExtededEventInfo, EventInfoWithID};
+    use super::{
+        EventInfo, EventUserInfo, RegistrationStatus, ExtededEventInfo, EventInfoWithID,
+        UserParticipation
+    };
+    use core::dict::Felt252Dict;
     use starknet::ContractAddress;
     use starknet::storage::{Map, Vec};
 
@@ -154,9 +169,8 @@ mod registration {
         events: Map<usize, EventInfo>,
         /// A map from event ID to the users registered to the event. Users who unregistered are
         /// also included, and should be filtered out when needed.
+        // TODO: Add this to the event info.
         registered_users: Map<usize, Vec<ContractAddress>>,
-        /// A map from event ID to whether the event has been canceled.
-        event_canceled: Map<usize, bool>,
         /// A simple data structure to allow lookup of events by time. The key is the day of the
         /// event, and the value is a vector of event IDs.
         events_by_day: Map<u64, Vec<usize>>,
@@ -211,7 +225,6 @@ mod registration {
     fn constructor(ref self: ContractState, admin: ContractAddress) {
         self.admins.write(admin, true);
     }
-
     #[generate_trait]
     impl PrivateFunctionsImpl of PrivateFunctions {
         fn _add_event(ref self: ContractState, time: felt252) {
@@ -220,7 +233,11 @@ mod registration {
             let time = TimeTrait::new(time.try_into().expect('Invalid time'));
             let event_id = n_events + 1;
             let event_day = time.day();
-            self.events.write(n_events.into(), EventInfo { time, number_of_participants: 0 });
+            self
+                .events
+                .write(
+                    n_events.into(), EventInfo { time, number_of_participants: 0, canceled: false }
+                );
             n_events_ptr.write(event_id);
             self.events_by_day.entry(event_day).append().write(event_id.into());
 
@@ -243,14 +260,14 @@ mod registration {
 
         fn _check_not_canceled(self: @ContractState, event_id: usize) {
             self._check_event_exists(event_id);
-            assert(!self.event_canceled.read(event_id), 'Event canceled.');
+            assert(!self.events.entry(event_id).canceled.read(), 'Event canceled.');
         }
 
         fn _register_user_to_event(
             ref self: ContractState, event_id: usize, user: ContractAddress
         ) {
             self._check_not_canceled(event_id);
-            // TODO: Explain why we need to use a pointer here.
+            // TODO: Explain why we chose to use a pointer here.
             let registration_status_ptr = self.registration_status.entry((event_id, user));
             let prev_status = registration_status_ptr.read();
             assert(!prev_status.is_registered(), 'User already registered.');
@@ -298,8 +315,38 @@ mod registration {
                     participants.append(user_address);
                 }
             };
-            let canceled = self.event_canceled.read(event_id);
-            ExtededEventInfo { id: event_id, time: event.time, participants, canceled }
+            ExtededEventInfo {
+                id: event_id, time: event.time, participants, canceled: event.canceled
+            }
+        }
+
+        fn _get_users_participation_summary(
+            self: @ContractState, event_infos: Span<ExtededEventInfo>,
+        ) -> Array<UserParticipation> {
+            // The users who participated in the events.
+            let mut users = ArrayTrait::new();
+            // Stores the number of participations per user. 0 participations means the user is not
+            // in the array (as dicts values are 0 by default).
+            let mut user_data: Felt252Dict<usize> = Default::default();
+            #[cairofmt::skip]
+            for event_info in event_infos {
+                for user in event_info.participants.span() {
+                    let n_participations = user_data.get((*user).into());
+                    if n_participations == 0 {
+                        users.append(*user);
+                    }
+                    user_data.insert((*user).into(), n_participations + 1);
+                    
+                }
+            };
+            let mut users_participation = ArrayTrait::new();
+            for user in users {
+                users_participation
+                    .append(
+                        UserParticipation { user, n_participations: user_data.get(user.into()) }
+                    );
+            };
+            users_participation
         }
     }
 
@@ -323,7 +370,6 @@ mod registration {
                         continue;
                     }
                     let event = self.events.read(event_id);
-                    let canceled = self.event_canceled.read(event_id);
                     if event.time >= start && event.time < end {
                         events
                             .append(
@@ -331,7 +377,7 @@ mod registration {
                                     id: event_id,
                                     time: event.time,
                                     registered,
-                                    canceled,
+                                    canceled: event.canceled,
                                 }
                             );
                     }
@@ -346,7 +392,7 @@ mod registration {
 
         fn get_participation_report_by_time(
             self: @ContractState, start: Time, end: Time
-        ) -> Array<ExtededEventInfo> {
+        ) -> Array<UserParticipation> {
             let mut events = ArrayTrait::new();
             let start_day = start.day();
             let end_day = end.day();
@@ -363,7 +409,7 @@ mod registration {
                     }
                 }
             };
-            events
+            self._get_users_participation_summary(events.span())
         }
 
         fn event_info(self: @ContractState, event_id: usize) -> EventInfo {
@@ -379,16 +425,16 @@ mod registration {
             // Formatting of for loops with ranges is bad in this version of Cairo.
             #[cairofmt::skip]
             for day in start_day..end_day {
-                    let cur_day_events = self.events_by_day.entry(day);
-                    let n_events_in_day = cur_day_events.len();
-                    for i in 0..n_events_in_day {
-                        let event_id = cur_day_events.at(i).read();
-                        let event = self.events.read(event_id);
-                        if event.time >= start && event.time < end {
-                            events.append(EventInfoWithID { id: event_id, info: event });
-                        }
+                let cur_day_events = self.events_by_day.entry(day);
+                let n_events_in_day = cur_day_events.len();
+                for i in 0..n_events_in_day {
+                    let event_id = cur_day_events.at(i).read();
+                    let event = self.events.read(event_id);
+                    if event.time >= start && event.time < end {
+                        events.append(EventInfoWithID { id: event_id, info: event });
                     }
-                };
+                }
+            };
             events
         }
 
@@ -405,7 +451,7 @@ mod registration {
         fn set_event_canceled(ref self: ContractState, event_id: usize, canceled: bool) {
             // TODO: Check owner.
             self._check_event_exists(event_id);
-            self.event_canceled.write(event_id, canceled);
+            self.events.entry(event_id).canceled.write(canceled);
 
             self.emit(EventCancellation { event_id, canceled });
         }
