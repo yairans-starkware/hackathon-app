@@ -7,29 +7,31 @@ export const UpcomingMealsTab = ({
   onConnectWallet,
   updateMeal,
   meals,
-  loading,
+  loadingAllEvents,
+  isSuccessFetchingUserEvents,
   isWalletConnected,
 }: {
   address?: string;
   meals: Meal[];
   isAllowedUser?: boolean;
+  loadingAllEvents: boolean;
+  isSuccessFetchingUserEvents: boolean;
   updateMeal: (mealId: string) => void;
   onConnectWallet: () => void;
-  loading: boolean;
   isWalletConnected: boolean;
 }) => {
-  if (!loading && !meals[0]) {
+  if (!loadingAllEvents && !meals[0]) {
     return <div>No upcoming meals to display</div>;
   }
 
   return (
     <>
-      {loading ? <MealCardSkeleton /> : <MealCard loading={loading} updateMeal={updateMeal} connect={onConnectWallet} isAllowedUser={isAllowedUser} meal={meals[0]} isWalletConnected={isWalletConnected} isNextMeal />}
+      {loadingAllEvents ? <MealCardSkeleton /> : <MealCard isSuccessFetchingUserEvents={isSuccessFetchingUserEvents} updateMeal={updateMeal} connect={onConnectWallet} isAllowedUser={isAllowedUser} meal={meals[0]} isWalletConnected={isWalletConnected} isNextMeal />}
       <div>
         <h2 className="text-2xl font-bold mb-6">Future Meals</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {loading ? Array(9).fill(null).map(() => <MealCardSkeleton />) : meals.slice(1, 10).map((meal, index) => (
-            <MealCard loading={loading} updateMeal={updateMeal} connect={onConnectWallet} isAllowedUser={isAllowedUser} key={meal.id ?? index} meal={meal} isWalletConnected={isWalletConnected} />
+          {loadingAllEvents ? Array(9).fill(null).map((_,index) => <MealCardSkeleton key={index} />) : meals.slice(1, 10).map((meal, index) => (
+            <MealCard isSuccessFetchingUserEvents={isSuccessFetchingUserEvents} updateMeal={updateMeal} connect={onConnectWallet} isAllowedUser={isAllowedUser} key={meal.id ?? index} meal={meal} isWalletConnected={isWalletConnected} />
           ))}
         </div>
       </div>

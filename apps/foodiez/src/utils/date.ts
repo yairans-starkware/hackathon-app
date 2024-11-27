@@ -5,14 +5,15 @@ export const getStartMonthOfEventTracking = () => {
 
   const lastYear = now.getFullYear() - 1;
 
-  const nextMonth = now.getMonth() + 1;
+  const nextMonth = now.getMonth() + 2;
 
   const resultYear = nextMonth > 12 ? lastYear + 1 : lastYear;
-  const resultMonth = nextMonth > 12 ? 1 : nextMonth;
+  const resultMonth = nextMonth > 12 ? nextMonth - 12 : nextMonth;
 
   const formattedMonth = String(resultMonth).padStart(2, '0');
   return `${formattedMonth}-${resultYear}`;
-}
+};
+
 
 export const getTimestampForFirstDayOfMonth = (monthYear: string) => {
   const [month, year] = monthYear.split('-').map(Number);
@@ -33,7 +34,7 @@ export const mealCountByDay = (meals: Meal[]): { [key: string]: number } => {
     Saturday: 0
   };
 
-  meals.forEach(({time}) => {
+  meals.forEach(({info: {time}}) => {
     const date = new Date(Number(time));
     const dayOfWeek = date.toLocaleString('en-US', { weekday: 'long' }) as keyof typeof daysOfWeek;
     if (daysOfWeek.hasOwnProperty(dayOfWeek)) {
@@ -72,16 +73,15 @@ export const groupMealsByMonth = (meals: Meal[]) => {
     months.push(`${year}-${month}`);
   }
 
- 
   const result: Record<string, Meal[]> = Object.fromEntries(months.map((month) => [month, []]));
 
   const oneYearAgo = new Date(thisYear, thisMonth, 1).getTime() - 365 * 24 * 60 * 60 * 1000;
   const lastYearMeals = meals.filter(
-    (meal) => Number(meal.time.seconds) * 1000 >= oneYearAgo && Number(meal.time.seconds) * 1000 < now.getTime()
+    (meal) => Number(meal.info.time.seconds) * 1000 >= oneYearAgo && Number(meal.info.time.seconds) * 1000 < now.getTime()
   );
 
   lastYearMeals.forEach((meal) => {
-    const date = new Date(Number(meal.time.seconds));
+    const date = new Date(Number(meal.info.time.seconds));
     const yearMonth = `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}`;
     if (result[yearMonth]) {
       result[yearMonth].push(meal);

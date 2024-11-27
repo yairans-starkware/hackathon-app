@@ -2,17 +2,18 @@ import { useState } from 'react'
 import { Header } from './Header/Header'
 import { useDynamicContext, useUserWallets } from '@dynamic-labs/sdk-react-core'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs'
-import { Calendar, PieChart } from 'lucide-react'
+import { Calendar, PieChart, Users } from 'lucide-react'
 import { AppTabs } from '../types/ui'
 import { UpcomingMealsTab } from './UpcomingMealsTab/UpcomingMealsTab'
 import { StatsTab } from './StatsTab/StatsTab'
-import { useMealEvents } from '../hooks/useMealEvents'
+import { useMealEvents } from '../hooks/useMealEvents';
+// import { ManagementTab } from './ManagementTab/ManagementTab'
 
 export const StarkitchenApp = () => {
   const {setShowAuthFlow} = useDynamicContext();
   const [activeTab, setActiveTab] = useState<string>(AppTabs.UPCOMING_MEALS);
   const wallets = useUserWallets();
-  const {pastMeals, futureMeals, isAllowedUser, loading, updateMeal} = useMealEvents();
+  const {pastMeals, futureMeals, isAllowedUser, loadingAllEvents, isSuccessFetchingUserEvents, updateMeal, setSuccessFetchingUserEvents} = useMealEvents();
 
   const starknetWallet = wallets.find(wallet => wallet.chain === 'STARK');
 
@@ -20,6 +21,7 @@ export const StarkitchenApp = () => {
 
   const onConnectWallet = async () => {
     setShowAuthFlow(true);
+    setSuccessFetchingUserEvents(false);
   }
 
   return (
@@ -36,23 +38,31 @@ export const StarkitchenApp = () => {
             <PieChart className="mr-2 h-4 w-4" />
             History & Stats
           </TabsTrigger>
+          <TabsTrigger value="management">
+              <Users className="mr-2 h-4 w-4" />
+              Management
+            </TabsTrigger>
         </TabsList>
         <TabsContent value={AppTabs.UPCOMING_MEALS} className="space-y-12">
           <UpcomingMealsTab
             updateMeal={updateMeal}
-            loading={loading}
+            loadingAllEvents={loadingAllEvents}
+            isSuccessFetchingUserEvents={isSuccessFetchingUserEvents}
             isAllowedUser={isAllowedUser}
             meals={futureMeals}
             address={starknetWallet?.address} 
-            onConnectWallet={onConnectWallet} 
-            isWalletConnected={isWalletConnected} 
+            onConnectWallet={onConnectWallet}
+            isWalletConnected={isWalletConnected}
           />
         </TabsContent>
         <TabsContent value={AppTabs.STATS_AND_PREV_MEALS} className="space-y-12">
-          <StatsTab 
-            setActiveTab={setActiveTab} 
-            meals={pastMeals} 
-          />  
+          <StatsTab
+            setActiveTab={setActiveTab}
+            meals={pastMeals}
+          />
+        </TabsContent>
+        <TabsContent value={AppTabs.MANAGEMENT} className="space-y-12">
+          {/* <ManagementTab />   */}
         </TabsContent>
       </Tabs>
       </main>

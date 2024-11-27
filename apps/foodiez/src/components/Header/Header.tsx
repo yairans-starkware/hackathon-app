@@ -49,9 +49,6 @@ export const Header = ({
                     Meals Attended This Month: 3
                   </span>
                   <span className="text-sm font-medium text-gray-500">
-                    Foodie Position: 1
-                  </span>
-                  <span className="text-sm font-medium text-gray-500">
                     {truncateAddress(wallet?.address ?? '')}
                   </span>
                   <Button variant="ghost" size="sm" onClick={openDisconnectDialog}>

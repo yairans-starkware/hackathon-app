@@ -25,10 +25,7 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
   }
 
   render() {
-    console.log('@@@@@here', this.state.hasError)
     if (this.state.hasError) {
-      console.log('@@@@@here')
-      // Render fallback UI if provided, otherwise default message
       return this.props.fallback || <h1>Something went wrong.</h1>;
     }
 
