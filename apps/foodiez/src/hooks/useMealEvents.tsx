@@ -6,6 +6,7 @@ import { getStartMonthOfEventTracking, getTimestampForFirstDayOfMonth } from "..
 
 export const useMealEvents = () => {
   const [mealEvents, setMealEvents] = useState<Meal[]>([]);
+  const [userMealEvents, setUserMealEvents] = useState<Meal[]>([]);
   const [isAllowedUser, setIsAllowedUser] = useState<boolean>();
   const [loading, setLoading] = useState(true);
   const wallets = useUserWallets();
@@ -23,17 +24,19 @@ export const useMealEvents = () => {
 
     setMealEvents([...mealEvents.slice(0, indexOfUpdatedMeal), newMeal, ...mealEvents.slice(indexOfUpdatedMeal + 1)]);
   }, [mealEvents]);
-  
+
   useEffect(() => {
     const fetchContractData = async () => {
       const aYearAgoTimestampSeconds = getTimestampForFirstDayOfMonth(getStartMonthOfEventTracking());
       const aMonthFromNowTimestampSeconds = Math.floor(Date.now() / 1000) + 30 * 24 * 60 * 60;
-      const [isAllowedUserData, mealEventsData] = await Promise.all([
+      const [isAllowedUserData, mealEventsData, userMealEventsData] = await Promise.all([
         starknetWallet?.address ? ReadCateringContract?.is_allowed_user(starknetWallet?.address) : Promise.resolve(false),
-        ReadCateringContract.events_infos_by_time({seconds: aYearAgoTimestampSeconds},{ seconds: aMonthFromNowTimestampSeconds })
+        ReadCateringContract.get_events_infos_by_time({seconds: aYearAgoTimestampSeconds},{ seconds: aMonthFromNowTimestampSeconds }),
+        starknetWallet?.address ? ReadCateringContract.get_user_events_by_time(starknetWallet?.address, {seconds: aYearAgoTimestampSeconds},{ seconds: aMonthFromNowTimestampSeconds }) : Promise.resolve([]),
       ])
 
       setIsAllowedUser(isAllowedUserData);
+      setUserMealEvents(userMealEventsData);
       setMealEvents(mealEventsData);
       setLoading(false);
     }
@@ -43,8 +46,21 @@ export const useMealEvents = () => {
     }
   }, [starknetWallet?.address, sdkHasLoaded]);
 
-  const futureMeals: Meal[] = mealEvents.filter((mealEvent) => Number(mealEvent.time.seconds) * 1000 > Date.now());
-  const pastMeals = mealEvents.filter((mealEvent) => Number(mealEvent.time.seconds) * 1000 <= Date.now());;
+  const futureMeals: Meal[] = mealEvents.filter((mealEvent) => Number(mealEvent.time.seconds) * 1000 > Date.now()).slice(0, 10);
+  const pastMeals = mealEvents.filter((mealEvent) => Number(mealEvent.time.seconds) * 1000 <= Date.now());
 
-  return {pastMeals, futureMeals, isAllowedUser, loading, updateMeal};
+  return {pastMeals, futureMeals: addUserParticipationToMealEvents(futureMeals, userMealEvents), isAllowedUser, loading, updateMeal};
+}
+
+const addUserParticipationToMealEvents = (futureMeals: Meal[], userMealEvents: Meal[]) => {
+  if (!userMealEvents.length) {
+    return futureMeals
+  } else {
+    return futureMeals.map((meal) => {
+      return {
+        ...meal,
+        registered: !!userMealEvents.find(({id, registered}) => (meal.id === id) && registered),
+      } 
+    })
+  }
 }

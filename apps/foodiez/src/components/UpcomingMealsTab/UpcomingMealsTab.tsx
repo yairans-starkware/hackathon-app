@@ -18,6 +18,10 @@ export const UpcomingMealsTab = ({
   loading: boolean;
   isWalletConnected: boolean;
 }) => {
+  if (!loading && !meals[0]) {
+    return <div>No upcoming meals to display</div>;
+  }
+
   return (
     <>
       {loading ? <MealCardSkeleton /> : <MealCard loading={loading} updateMeal={updateMeal} connect={onConnectWallet} isAllowedUser={isAllowedUser} meal={meals[0]} isWalletConnected={isWalletConnected} isNextMeal />}

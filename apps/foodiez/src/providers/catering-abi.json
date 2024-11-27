@@ -51,6 +51,24 @@
     ]
   },
   {
+    "name": "event_manager::event_manager::ExtededEventInfo",
+    "type": "struct",
+    "members": [
+      {
+        "name": "time",
+        "type": "event_manager::utils::time::Time"
+      },
+      {
+        "name": "participants",
+        "type": "core::array::Array::<core::starknet::contract_address::ContractAddress>"
+      },
+      {
+        "name": "canceled",
+        "type": "core::bool"
+      }
+    ]
+  },
+  {
     "name": "event_manager::event_manager::EventInfo",
     "type": "struct",
     "members": [
@@ -79,7 +97,7 @@
     "type": "interface",
     "items": [
       {
-        "name": "get_user_events",
+        "name": "get_user_events_by_time",
         "type": "function",
         "inputs": [
           {
@@ -87,8 +105,12 @@
             "type": "core::starknet::contract_address::ContractAddress"
           },
           {
-            "name": "max_n_events",
-            "type": "core::integer::u32"
+            "name": "start",
+            "type": "event_manager::utils::time::Time"
+          },
+          {
+            "name": "end",
+            "type": "event_manager::utils::time::Time"
           }
         ],
         "outputs": [
@@ -110,12 +132,32 @@
         "state_mutability": "view"
       },
       {
+        "name": "get_participation_report_by_time",
+        "type": "function",
+        "inputs": [
+          {
+            "name": "start",
+            "type": "event_manager::utils::time::Time"
+          },
+          {
+            "name": "end",
+            "type": "event_manager::utils::time::Time"
+          }
+        ],
+        "outputs": [
+          {
+            "type": "core::array::Array::<event_manager::event_manager::ExtededEventInfo>"
+          }
+        ],
+        "state_mutability": "view"
+      },
+      {
         "name": "event_info",
         "type": "function",
         "inputs": [
           {
             "name": "event_id",
-            "type": "core::felt252"
+            "type": "core::integer::u32"
           }
         ],
         "outputs": [
@@ -126,27 +168,7 @@
         "state_mutability": "view"
       },
       {
-        "name": "events_infos_by_id",
-        "type": "function",
-        "inputs": [
-          {
-            "name": "start",
-            "type": "core::integer::u32"
-          },
-          {
-            "name": "end",
-            "type": "core::integer::u32"
-          }
-        ],
-        "outputs": [
-          {
-            "type": "core::array::Array::<event_manager::event_manager::EventInfo>"
-          }
-        ],
-        "state_mutability": "view"
-      },
-      {
-        "name": "events_infos_by_time",
+        "name": "get_events_infos_by_time",
         "type": "function",
         "inputs": [
           {
@@ -171,7 +193,7 @@
         "inputs": [
           {
             "name": "event_id",
-            "type": "core::felt252"
+            "type": "core::integer::u32"
           }
         ],
         "outputs": [],
@@ -183,7 +205,7 @@
         "inputs": [
           {
             "name": "event_id",
-            "type": "core::felt252"
+            "type": "core::integer::u32"
           }
         ],
         "outputs": [],
@@ -207,7 +229,7 @@
         "inputs": [
           {
             "name": "event_id",
-            "type": "core::felt252"
+            "type": "core::integer::u32"
           },
           {
             "name": "time",
@@ -223,7 +245,7 @@
         "inputs": [
           {
             "name": "event_id",
-            "type": "core::felt252"
+            "type": "core::integer::u32"
           },
           {
             "name": "canceled",
@@ -338,7 +360,7 @@
       {
         "kind": "key",
         "name": "event_id",
-        "type": "core::felt252"
+        "type": "core::integer::u32"
       },
       {
         "kind": "data",
@@ -355,7 +377,7 @@
       {
         "kind": "data",
         "name": "event_id",
-        "type": "core::felt252"
+        "type": "core::integer::u32"
       },
       {
         "kind": "data",
@@ -372,7 +394,7 @@
       {
         "kind": "data",
         "name": "event_id",
-        "type": "core::felt252"
+        "type": "core::integer::u32"
       },
       {
         "kind": "data",
