@@ -144,24 +144,18 @@ trait IRegistration<T> {
 
 #[starknet::contract]
 mod registration {
-    use super::RegistrationStatusTrait;
-    use super::IRegistration;
-    use starknet::storage::VecTrait;
-    use starknet::storage::MutableVecTrait;
     use crate::utils::time::{Time, TimeTrait};
-    use starknet::storage::StorageAsPointer;
-    use starknet::storage::StoragePathEntry;
-    use starknet::storage::StorageMapReadAccess;
-    use starknet::storage::StoragePointerWriteAccess;
-    use starknet::storage::StoragePointerReadAccess;
-    use starknet::storage::StorageMapWriteAccess;
+    use starknet::storage::{
+        Map, Vec, StorageAsPointer, StoragePathEntry, StorageMapReadAccess,
+        StoragePointerWriteAccess, StoragePointerReadAccess, StorageMapWriteAccess, VecTrait,
+        MutableVecTrait
+    };
     use super::{
         EventInfo, EventUserInfo, RegistrationStatus, ExtededEventInfo, EventInfoWithID,
-        UserParticipation
+        UserParticipation, RegistrationStatusTrait, IRegistration
     };
     use core::dict::Felt252Dict;
     use starknet::ContractAddress;
-    use starknet::storage::{Map, Vec};
 
     #[storage]
     struct Storage {
