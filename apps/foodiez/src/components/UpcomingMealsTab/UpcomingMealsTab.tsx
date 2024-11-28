@@ -32,13 +32,13 @@ export const UpcomingMealsTab = ({
       <div>
         <h2 className="text-2xl font-bold mb-6">Future Meals</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {loadingAllEvents ? Array(9).fill(null).map((_,index) => <MealCardSkeleton key={index} />) : futureMeals.slice(1, 7).map((meal, index) => (
+          {loadingAllEvents ? Array(6).fill(null).map((_,index) => <MealCardSkeleton key={index} />) : futureMeals.slice(1, 7).map((meal, index) => (
             <MealCard isSuccessFetchingUserEvents={isSuccessFetchingUserEvents} updateMeal={updateMeal} connect={onConnectWallet} isAllowedUser={isAllowedUser} key={meal.id ?? index} meal={meal} isWalletConnected={isWalletConnected} />
           ))}
         </div>
         <h2 className="text-2xl font-bold mb-6 mt-12">Past Meals</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {loadingAllEvents ? Array(9).fill(null).map((_,index) => <MealCardSkeleton key={index} />) : pastMeals.map((meal, index) => (
+          {loadingAllEvents ? Array(6).fill(null).map((_,index) => <MealCardSkeleton key={index} />) : pastMeals.reverse().slice(0, 6).map((meal, index) => (
             <MealCard isSuccessFetchingUserEvents={isSuccessFetchingUserEvents} updateMeal={updateMeal} connect={onConnectWallet} isAllowedUser={isAllowedUser} key={meal.id ?? index} meal={meal} isWalletConnected={isWalletConnected} />
           ))}
         </div>

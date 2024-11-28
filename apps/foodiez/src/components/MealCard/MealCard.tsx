@@ -76,8 +76,8 @@ export const MealCard = ({
     {isPastMeal ? null : (
       <CardFooter>
       {isWalletConnected ? (
-        <Button 
-          className="w-full" 
+        <Button
+          className={`w-full ${meal.info.registered ? 'bg-red-500 hover:bg-red-600 text-white' : ''}`} 
           onClick={handleRegistration}
           disabled={isWalletConnected && !isAllowedUser && !meal.info.registered}
         >
