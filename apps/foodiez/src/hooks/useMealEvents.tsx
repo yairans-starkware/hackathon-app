@@ -4,18 +4,17 @@ import { useDynamicContext, useUserWallets } from "@dynamic-labs/sdk-react-core"
 import { Meal } from "../types/meal";
 import { getStartMonthOfEventTracking, getTimestampForFirstDayOfMonth } from "../utils/date";
 
-// let fetched = false;
+let fetched = false;
 export const useMealEvents = () => {
   const [mealEvents, setMealEvents] = useState<Meal[]>([]);
-  const [userMealEvents, setUserMealEvents] = useState<Meal[]>([]);
   const [isAllowedUser, setIsAllowedUser] = useState<boolean>();
   const [loadingAllEvents, setLoadingAllEvents] = useState(true);
   const [isSuccessFetchingUserEvents, setSuccessFetchingUserEvents] = useState(false);
   const wallets = useUserWallets();
   const {sdkHasLoaded} = useDynamicContext();
-  
+
   const starknetWallet = useMemo(() => wallets.find(wallet => wallet.chain === 'STARK'), [wallets]);
-  
+
   const updateMeal = useCallback((mealId: string) => {
     const indexOfUpdatedMeal = mealEvents.map((meal) => meal.id).indexOf(mealId);
     const oldMeal = mealEvents[indexOfUpdatedMeal];
@@ -36,17 +35,16 @@ export const useMealEvents = () => {
       const aYearAgoTimestampSeconds = getTimestampForFirstDayOfMonth(getStartMonthOfEventTracking());
       const aMonthFromNowTimestampSeconds = Math.floor(Date.now() / 1000) + 30 * 24 * 60 * 60;
       try {
-        // if (fetched) {
-        //   return;
-        // }
+        if (fetched) {
+          return;
+        }
         const [isAllowedUserData, mealEventsData, userMealEventsData] = await Promise.all([
           starknetWallet?.address ? ReadCateringContract?.is_allowed_user(starknetWallet?.address) : Promise.resolve(false),
           ReadCateringContract.get_events_infos_by_time({seconds: aYearAgoTimestampSeconds},{ seconds: aMonthFromNowTimestampSeconds }),
           starknetWallet?.address ? ReadCateringContract.get_user_events_by_time(starknetWallet?.address, {seconds: aYearAgoTimestampSeconds},{ seconds: aMonthFromNowTimestampSeconds }) : Promise.resolve([]),
         ])
-        // fetched = true;
+        fetched = true;
         setIsAllowedUser(isAllowedUserData);
-        setUserMealEvents(userMealEventsData);
         setMealEvents(addUserParticipationToMealEvents(mealEventsData, userMealEventsData));
         setLoadingAllEvents(false);
         if (starknetWallet?.address) {
@@ -62,7 +60,7 @@ export const useMealEvents = () => {
     }
   }, [starknetWallet?.address, sdkHasLoaded]);
 
-  const futureMeals: Meal[] = mealEvents.filter((mealEvent) => Number(mealEvent.info.time.seconds) * 1000 > Date.now()).slice(0, 10);
+  const futureMeals: Meal[] = mealEvents.filter((mealEvent) => Number(mealEvent.info.time.seconds) * 1000 > Date.now()).slice(0, 7);
   const pastMeals = mealEvents.filter((mealEvent) => Number(mealEvent.info.time.seconds) * 1000 <= Date.now());
 
   return {
@@ -85,7 +83,7 @@ const addUserParticipationToMealEvents = (mealEvents: Meal[], userMealEvents: Me
         ...meal,
         info: {
           ...meal.info,
-          registered: !!((userMealEvents as any).find(({id, registered}) => (meal.id === id) && registered)),
+          registered: !!(userMealEvents.find(({id, info: {registered}}) => (meal.id === id) && registered)),
         }
       } 
     })

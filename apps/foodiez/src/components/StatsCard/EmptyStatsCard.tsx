@@ -9,7 +9,7 @@ export const EmptyStatsCard = ({
   setActiveTab: React.Dispatch<React.SetStateAction<string>>,
 }) => {
   const handleNavigateToUpcomingMeals = () => {
-    setActiveTab(AppTabs.UPCOMING_MEALS);
+    setActiveTab(AppTabs.MEAL_REGISTRATION);
   }
   
   return (

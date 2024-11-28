@@ -29,13 +29,9 @@
     ]
   },
   {
-    "name": "event_manager::event_manager::EventUserInfo",
+    "name": "event_manager::event_manager::EventUserInfoInner",
     "type": "struct",
     "members": [
-      {
-        "name": "id",
-        "type": "core::integer::u32"
-      },
       {
         "name": "time",
         "type": "event_manager::utils::time::Time"
@@ -51,7 +47,7 @@
     ]
   },
   {
-    "name": "event_manager::event_manager::ExtededEventInfo",
+    "name": "event_manager::event_manager::EventUserInfo",
     "type": "struct",
     "members": [
       {
@@ -59,16 +55,22 @@
         "type": "core::integer::u32"
       },
       {
-        "name": "time",
-        "type": "event_manager::utils::time::Time"
+        "name": "info",
+        "type": "event_manager::event_manager::EventUserInfoInner"
+      }
+    ]
+  },
+  {
+    "name": "event_manager::event_manager::UserParticipation",
+    "type": "struct",
+    "members": [
+      {
+        "name": "user",
+        "type": "core::starknet::contract_address::ContractAddress"
       },
       {
-        "name": "participants",
-        "type": "core::array::Array::<core::starknet::contract_address::ContractAddress>"
-      },
-      {
-        "name": "canceled",
-        "type": "core::bool"
+        "name": "n_participations",
+        "type": "core::integer::u32"
       }
     ]
   },
@@ -168,7 +170,7 @@
         ],
         "outputs": [
           {
-            "type": "core::array::Array::<event_manager::event_manager::ExtededEventInfo>"
+            "type": "core::array::Array::<event_manager::event_manager::UserParticipation>"
           }
         ],
         "state_mutability": "view"
