@@ -54,6 +54,12 @@ struct UserParticipation {
 struct EventUserInfo {
     /// The ID of the event.
     id: usize,
+    /// The info about the user's registration to the event.
+    info: EventUserInfoInner,
+}
+
+#[derive(Drop, Serde)]
+struct EventUserInfoInner {
     /// The time of the event, as a Unix timestamp.
     time: Time,
     /// Whether the user is registered to the event.
@@ -152,7 +158,7 @@ mod registration {
     };
     use super::{
         EventInfo, EventUserInfo, RegistrationStatus, ExtededEventInfo, EventInfoWithID,
-        UserParticipation, RegistrationStatusTrait, IRegistration
+        UserParticipation, RegistrationStatusTrait, IRegistration, EventUserInfoInner
     };
     use core::dict::Felt252Dict;
     use starknet::ContractAddress;
@@ -219,8 +225,10 @@ mod registration {
     fn constructor(ref self: ContractState, admin: ContractAddress) {
         self.admins.write(admin, true);
     }
+
     #[generate_trait]
     impl PrivateFunctionsImpl of PrivateFunctions {
+        /// Adds an event to the contract.
         fn _add_event(ref self: ContractState, time: felt252) {
             let n_events_ptr = self.n_events.as_ptr();
             let n_events = n_events_ptr.read();
@@ -369,9 +377,11 @@ mod registration {
                             .append(
                                 EventUserInfo {
                                     id: event_id,
-                                    time: event.time,
-                                    registered,
-                                    canceled: event.canceled,
+                                    info: EventUserInfoInner {
+                                        time: event.time,
+                                        registered,
+                                        canceled: event.canceled,
+                                    },
                                 }
                             );
                     }
