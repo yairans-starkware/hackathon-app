@@ -51,7 +51,7 @@ export const MealCard = ({
       closeFullscreenLoader?.();
     }
   }
-
+  console.log('@@@@@@', isAllowedUser);
   return (
   <Card>
     <CardHeader>

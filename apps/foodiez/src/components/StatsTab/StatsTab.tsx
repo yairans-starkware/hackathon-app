@@ -1,32 +1,29 @@
 import { useMemo, useState } from "react"
 import { MealCard } from "../MealCard/MealCard"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select"
-import { Meal } from "../../types/meal"
 import { StatsCard } from "../StatsCard/StatsCard"
 import { getCurrentDate, groupMealsByMonth } from "../../utils/date"
 import { useMonthlyStats } from "../../hooks/useMonthlyStats"
 import { EmptyStatsCard } from "../StatsCard/EmptyStatsCard"
+import { Meal } from "../../types/meal"
 
 const {month: currentMonth, year: currentYear} = getCurrentDate();
 
 export const StatsTab = ({
-  meals,
   setActiveTab,
+  meals,
 }: {
   meals: Meal[],
   setActiveTab: React.Dispatch<React.SetStateAction<string>>,
 }) => {
-  const mealsGroupedByMonth = useMemo(() => groupMealsByMonth(meals), [meals]);
-  const monthlyStats = useMonthlyStats({mealsGroupedByMonth});
   const [selectedDate, setSelectedDate] = useState<string>(`${currentYear}-${currentMonth}`);
+  const mealsGroupedByMonth = useMemo(() => groupMealsByMonth((meals.filter(({info: {registered}}) => registered))), [meals]);
+  const monthlyStats = useMonthlyStats({mealsGroupedByMonth});
   
-  const [year, month] = selectedDate.split('-');
-  const formattedMonth = Intl.DateTimeFormat('en-US', { month: 'long', year: 'numeric' }).format(new Date(Number(year), Number(month) - 1))
-
   const selectedMonthStats = monthlyStats.find(stat => stat.month === selectedDate);
   
-  const mealCount = Object.values(selectedMonthStats?.mealsByDay ?? {}).reduce((mealsCount, acc) => mealsCount + acc, 0)
-
+  const mealCount = Object.values(selectedMonthStats?.mealsByDay ?? {}).reduce((mealsCount, acc) => mealsCount + acc, 0);
+  
   return (
     <>
       <div className="flex justify-between items-center">
@@ -57,11 +54,7 @@ export const StatsTab = ({
                 )}
               </div>
             </div>
-            <StatsCard
-              selectedMonth={formattedMonth}
-              setActiveTab={setActiveTab} 
-              stats={selectedMonthStats}
-            />
+            <StatsCard stats={selectedMonthStats} />
         </div>
       )}
     </>

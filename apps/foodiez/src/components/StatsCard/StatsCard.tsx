@@ -9,8 +9,6 @@ export const StatsCard = ({
   stats,
 }: { 
   stats?: MonthlyStats,
-  selectedMonth: string,
-  setActiveTab: React.Dispatch<React.SetStateAction<string>>,
 }) => {
   if (!stats) {
     return null;
