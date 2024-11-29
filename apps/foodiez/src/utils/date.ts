@@ -11,12 +11,25 @@ export const getStartMonthOfEventTracking = () => {
   const resultMonth = nextMonth > 12 ? nextMonth - 12 : nextMonth;
 
   const formattedMonth = String(resultMonth).padStart(2, '0');
-  return `${formattedMonth}-${resultYear}`;
+  return `${resultYear}-${formattedMonth}`;
 };
 
+export const getTimestampForLastDayOfMonth = (dateString: string) => {
+  const [year, month] = dateString.split('-').map(Number);
+
+  if (!month || !year || month < 1 || month > 12) {
+      throw new Error('Invalid date string. Use format "YYYY-MM".');
+  }
+
+  const nextMonth = new Date(year, month, 1);
+
+  const lastDay = new Date(nextMonth.getTime() - 1);
+
+  return lastDay.getTime();
+}
 
 export const getTimestampForFirstDayOfMonth = (monthYear: string) => {
-  const [month, year] = monthYear.split('-').map(Number);
+  const [year, month] = monthYear.split('-').map(Number);
 
   const date = new Date(year, month - 1, 1);
 
@@ -60,11 +73,11 @@ export const getCurrentDate = () => {
   return {month, year};
 }
 
-export const groupMealsByMonth = (meals: Meal[]) => {
+export const getMonthOptions = () => {
   const now = new Date();
   const thisYear = now.getFullYear();
-  const thisMonth = now.getMonth();
   const lastYear = thisYear - 1;
+  const thisMonth = now.getMonth();
 
   const months: string[] = [];
   for (let i = 0; i < 12; i++) {
@@ -73,6 +86,16 @@ export const groupMealsByMonth = (meals: Meal[]) => {
     const month = (monthIndex + 1).toString().padStart(2, '0');
     months.push(`${year}-${month}`);
   }
+
+  return months;
+}
+
+export const groupMealsByMonth = (meals: Meal[]) => {
+  const now = new Date();
+  const thisYear = now.getFullYear();
+  const thisMonth = now.getMonth();
+
+  const months = getMonthOptions();
 
   const result: Record<string, Meal[]> = Object.fromEntries(months.map((month) => [month, []]));
   

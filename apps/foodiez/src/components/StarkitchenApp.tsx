@@ -7,6 +7,7 @@ import { AppTabs } from '../types/ui'
 import { UpcomingMealsTab } from './UpcomingMealsTab/UpcomingMealsTab'
 import { StatsTab } from './StatsTab/StatsTab'
 import { useMealEvents } from '../hooks/useMealEvents';
+import { ManagementTab } from './ManagementTab/ManagementTab'
 // import { ManagementTab } from './ManagementTab/ManagementTab'
 
 export const StarkitchenApp = () => {
@@ -38,7 +39,7 @@ export const StarkitchenApp = () => {
             <PieChart className="mr-2 h-4 w-4" />
             History & Stats
           </TabsTrigger>
-          <TabsTrigger value="management">
+          <TabsTrigger value={AppTabs.MANAGEMENT}>
               <Users className="mr-2 h-4 w-4" />
               Management
             </TabsTrigger>
@@ -63,7 +64,7 @@ export const StarkitchenApp = () => {
           />
         </TabsContent>
         <TabsContent value={AppTabs.MANAGEMENT} className="space-y-12">
-          {/* <ManagementTab />   */}
+          <ManagementTab />  
         </TabsContent>
       </Tabs>
       </main>

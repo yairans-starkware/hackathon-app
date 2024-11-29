@@ -4,10 +4,7 @@ import { useDynamicContext, Wallet } from "@dynamic-labs/sdk-react-core";
 import { DisconnectWalletDialog } from "../Dialogs/DisconnectWalletDialog";
 import { useCallback, useState } from "react";
 import { SrcPrefix } from "../../utils/consts";
-
-const truncateAddress = (address: string) => {
-  return `${address.slice(0, 6)}...${address.slice(-4)}`
-}
+import { truncateAddress } from "../../utils/string";
 
 export const Header = ({
   isConnected, 
@@ -45,9 +42,6 @@ export const Header = ({
             <div className="flex items-center space-x-4">
                 {isConnected ? (
                 <div className="flex flex-col md:flex-row items-center space-y-2 md:space-y-0 md:space-x-4">
-                  <span className="text-sm font-medium text-gray-500">
-                    Meals Attended This Month: 3
-                  </span>
                   <span className="text-sm font-medium text-gray-500">
                     {truncateAddress(wallet?.address ?? '')}
                   </span>
