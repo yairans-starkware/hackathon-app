@@ -16,6 +16,8 @@ struct EventInfoInner {
     canceled: bool,
     /// Is the event locked.
     locked: bool,
+    /// A short description of the event.
+    description: felt252,
 }
 
 /// Basic information about an event, to be returned when querying the contract.
@@ -128,7 +130,7 @@ trait IRegistration<T> {
     fn unregister(ref self: T, event_id: usize);
 
     /// Adds an event to the contract.
-    fn add_event(ref self: T, time: felt252);
+    fn add_event(ref self: T, time: felt252, description: felt252);
     /// Modifies the time of an event.
     fn modify_event_time(ref self: T, event_id: usize, time: felt252);
     /// Locks an event.
@@ -234,7 +236,7 @@ mod registration {
     #[generate_trait]
     impl PrivateFunctionsImpl of PrivateFunctions {
         /// Adds an event to the contract.
-        fn _add_event(ref self: ContractState, time: felt252) {
+        fn _add_event(ref self: ContractState, time: felt252, description: felt252) {
             let n_events_ptr = self.n_events.as_ptr();
             let n_events = n_events_ptr.read();
             let time = TimeTrait::new(time.try_into().expect('Invalid time'));
@@ -245,7 +247,7 @@ mod registration {
                 .write(
                     n_events.into(),
                     EventInfoInner {
-                        time, number_of_participants: 0, canceled: false, locked: false
+                        time, number_of_participants: 0, canceled: false, locked: false, description
                     }
                 );
             n_events_ptr.write(event_id);
@@ -450,9 +452,9 @@ mod registration {
             events
         }
 
-        fn add_event(ref self: ContractState, time: felt252) {
+        fn add_event(ref self: ContractState, time: felt252, description: felt252) {
             // TODO: Check owner.
-            self._add_event(time);
+            self._add_event(time, description);
         }
 
         fn modify_event_time(ref self: ContractState, event_id: usize, time: felt252) {
