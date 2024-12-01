@@ -1,0 +1,47 @@
+{
+  "name": "@catering-app/starknet-contract-connect",
+  "version": "0.1.0",
+  "description": "A simple React library built with TypeScript",
+  "main": "src/index.ts",
+  "module": "src/index.ts",
+  "types": "src/index.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest",
+    "lint": "eslint .",
+    "prepublishOnly": "npm run build"
+  },
+  "dependencies": {
+    "@dynamic-labs/ethereum": "^4.0.0-alpha.38",
+    "@dynamic-labs/sdk-react-core": "^4.0.0-alpha.38",
+    "@dynamic-labs/starknet": "^4.0.0-alpha.38"
+  },
+  "peerDependencies": {
+    "react": "^18.0.0",
+    "lucide-react": "^0.456.0",
+    "react-dom": "^18.0.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.0.28",
+    "@types/react-dom": "^18.0.11",
+    "typescript": "^5.2.2",
+    "eslint": "^8.49.0",
+    "eslint-config-prettier": "^9.0.0",
+    "eslint-plugin-react": "^7.33.1",
+    "vitest": "^0.34.1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-username/my-react-library.git"
+  },
+  "keywords": [
+    "react",
+    "typescript",
+    "library"
+  ],
+  "author": "Your Name",
+  "license": "MIT"
+}

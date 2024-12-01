@@ -1,10 +1,10 @@
-import { LogOut, Wallet as WalletIcon} from "lucide-react"
+import { LogOut } from "lucide-react"
 import { Button } from "../ui/button"
-import { useDynamicContext, Wallet } from "@dynamic-labs/sdk-react-core";
 import { DisconnectWalletDialog } from "../Dialogs/DisconnectWalletDialog";
 import { useCallback, useState } from "react";
 import { SrcPrefix } from "../../utils/consts";
 import { truncateAddress } from "../../utils/string";
+import { ConnectWalletButton, useWalletEvents, Wallet } from "@catering-app/starknet-contract-connect";
 
 export const Header = ({
   isConnected, 
@@ -16,7 +16,7 @@ export const Header = ({
   wallet?: Wallet<any>,
 }) => {
   const [isDisconnectDialogOpen, setIsDisconnectDialogOpen] = useState<boolean>(false);
-  const {handleLogOut} = useDynamicContext();
+  const {handleLogOut} = useWalletEvents();
 
   const handleCloseDisconnectDialog = useCallback(() => {
     setIsDisconnectDialogOpen(false);
@@ -51,10 +51,7 @@ export const Header = ({
                   </Button>
                 </div>
               ) : (
-                <Button onClick={onConnectWallet}>
-                  <WalletIcon className="mr-2 h-4 w-4" />
-                  Connect Wallet
-                </Button>
+                <ConnectWalletButton onConnect={onConnectWallet} />
               )}
             </div>
           </div>

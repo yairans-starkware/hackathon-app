@@ -2,12 +2,13 @@ import {FC, PropsWithChildren} from 'react';
 
 import {DynamicContextProvider} from '@dynamic-labs/sdk-react-core';
 import {StarknetWalletConnectors} from '@dynamic-labs/starknet';
+import React from 'react';
 
-export const DynamicProvider: FC<PropsWithChildren> = ({children}) => {
+export const StarknetContractConnectProvider: FC<PropsWithChildren & { dynamicEnvId: string }> = ({children, dynamicEnvId}) => {
   return (
     <DynamicContextProvider
       settings={{
-        environmentId: import.meta.env.VITE_APP_DYNAMIC_ENV_ID,
+        environmentId: dynamicEnvId,
         initialAuthenticationMode: 'connect-only',
         walletConnectors: [
           StarknetWalletConnectors

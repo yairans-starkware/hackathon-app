@@ -1,14 +1,15 @@
 import { Button } from "../ui/button"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "../ui/card"
-import { AlertCircle, Check, WalletIcon, X } from "lucide-react"
+import { AlertCircle, Check, X } from "lucide-react"
 import { Badge } from '../ui/badge'
 import { Meal } from "../../types/meal"
 import { useCateringContract } from "../../hooks/useCateringContract"
 import { openFullscreenLoader } from "../FullscreenLoaderModal/FullscreenLoaderModal"
+import { ConnectWalletButton } from "@catering-app/starknet-contract-connect"
 
 export const MealCard = ({ 
   meal,
-  connect,
+  onConnectWallet,
   updateMeal,
   isSuccessFetchingUserEvents = false,
   isPastMeal = false,
@@ -20,7 +21,7 @@ export const MealCard = ({
   isPastMeal?: boolean; 
   isWalletConnected?: boolean,
   isSuccessFetchingUserEvents?: boolean;
-  connect?: () => void,
+  onConnectWallet?: () => void,
   updateMeal?: (mealId: string) => void,
   isAllowedUser?: boolean,
   isNextMeal?: boolean 
@@ -51,7 +52,7 @@ export const MealCard = ({
       closeFullscreenLoader?.();
     }
   }
-  console.log('@@@@@@', isAllowedUser);
+
   return (
   <Card>
     <CardHeader>
@@ -94,10 +95,7 @@ export const MealCard = ({
           )}
         </Button>
       ) : (
-        <Button onClick={connect}>
-          <WalletIcon className="mr-2 h-4 w-4" />
-          Connect Wallet
-        </Button>
+        <ConnectWalletButton onConnect={onConnectWallet} />
       )}
     </CardFooter>)}
   </Card>

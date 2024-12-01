@@ -1,27 +1,23 @@
-import { useState } from 'react'
-import { Header } from './Header/Header'
-import { useDynamicContext, useUserWallets } from '@dynamic-labs/sdk-react-core'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs'
-import { Calendar, PieChart, Users } from 'lucide-react'
-import { AppTabs } from '../types/ui'
-import { UpcomingMealsTab } from './UpcomingMealsTab/UpcomingMealsTab'
-import { StatsTab } from './StatsTab/StatsTab'
+import { useState } from 'react';
+import { Header } from './Header/Header';
+import { useStarknetWallet } from '@catering-app/starknet-contract-connect';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
+import { Calendar, PieChart, Users } from 'lucide-react';
+import { AppTabs } from '../types/ui';
+import { UpcomingMealsTab } from './UpcomingMealsTab/UpcomingMealsTab';
+import { StatsTab } from './StatsTab/StatsTab';
 import { useMealEvents } from '../hooks/useMealEvents';
-import { ManagementTab } from './ManagementTab/ManagementTab'
-// import { ManagementTab } from './ManagementTab/ManagementTab'
+import { ManagementTab } from './ManagementTab/ManagementTab';
 
 export const StarkitchenApp = () => {
-  const {setShowAuthFlow} = useDynamicContext();
+  const starknetWallet = useStarknetWallet();
   const [activeTab, setActiveTab] = useState<string>(AppTabs.MEAL_REGISTRATION);
-  const wallets = useUserWallets();
   const {pastMeals, futureMeals, isAllowedUser, loadingAllEvents, isSuccessFetchingUserEvents, updateMeal, setSuccessFetchingUserEvents} = useMealEvents();
 
-  const starknetWallet = wallets.find(wallet => wallet.chain === 'STARK');
 
   const isWalletConnected = Boolean(starknetWallet);
 
   const onConnectWallet = async () => {
-    setShowAuthFlow(true);
     setSuccessFetchingUserEvents(false);
   }
 
