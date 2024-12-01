@@ -6,7 +6,6 @@ use crate::utils::time::Time;
 
 
 /// Basic information about an event, to be stored in the contract.
-// TODO: Consider adding a name and description.
 #[derive(Drop, Serde, starknet::Store)]
 struct EventInfoInner {
     /// The time of the event, as a Unix timestamp.
@@ -15,6 +14,8 @@ struct EventInfoInner {
     number_of_participants: usize,
     /// Is the event canceled.
     canceled: bool,
+    /// Is the event locked.
+    locked: bool,
 }
 
 /// Basic information about an event, to be returned when querying the contract.
@@ -130,6 +131,10 @@ trait IRegistration<T> {
     fn add_event(ref self: T, time: felt252);
     /// Modifies the time of an event.
     fn modify_event_time(ref self: T, event_id: usize, time: felt252);
+    /// Locks an event.
+    fn lock_event(ref self: T, event_id: usize);
+    /// Unlocks an event.
+    fn unlock_event(ref self: T, event_id: usize);
     /// Sets whether an event is canceled.
     fn set_event_canceled(ref self: T, event_id: usize, canceled: bool);
 
@@ -239,7 +244,9 @@ mod registration {
                 .events
                 .write(
                     n_events.into(),
-                    EventInfoInner { time, number_of_participants: 0, canceled: false }
+                    EventInfoInner {
+                        time, number_of_participants: 0, canceled: false, locked: false
+                    }
                 );
             n_events_ptr.write(event_id);
             self.events_by_day.entry(event_day).append().write(event_id.into());
@@ -451,6 +458,18 @@ mod registration {
         fn modify_event_time(ref self: ContractState, event_id: usize, time: felt252) {
             // TODO: Check owner.
             self._modify_event_time(event_id, time);
+        }
+
+        fn lock_event(ref self: ContractState, event_id: usize) {
+            // TODO: Check owner.
+            self._check_event_exists(event_id);
+            self.events.entry(event_id).locked.write(true);
+        }
+
+        fn unlock_event(ref self: ContractState, event_id: usize) {
+            // TODO: Check owner.
+            self._check_event_exists(event_id);
+            self.events.entry(event_id).locked.write(false);
         }
 
         fn set_event_canceled(ref self: ContractState, event_id: usize, canceled: bool) {
