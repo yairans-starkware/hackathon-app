@@ -2,7 +2,6 @@ import {FC, PropsWithChildren} from 'react';
 
 import {DynamicContextProvider} from '@dynamic-labs/sdk-react-core';
 import {StarknetWalletConnectors} from '@dynamic-labs/starknet';
-import React from 'react';
 
 export const StarknetContractConnectProvider: FC<PropsWithChildren & { dynamicEnvId: string }> = ({children, dynamicEnvId}) => {
   return (

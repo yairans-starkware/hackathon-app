@@ -1,4 +1,3 @@
-import React from "react"
 import {Button} from './ui/button';
 import {Wallet as WalletIcon} from "lucide-react";
 import { useDynamicContext } from '@dynamic-labs/sdk-react-core';
