@@ -13,6 +13,12 @@ importers:
       '@catering-app/starknet-contract-connect':
         specifier: workspace:*
         version: link:../../packages/starknet-contract-connect
+      '@dynamic-labs/sdk-react-core':
+        specifier: ^4.0.0-alpha.38
+        version: 4.0.0-alpha.38(@types/react@18.3.12)(react-dom@18.3.1(react@18.3.1))(react-native@0.74.0(@babel/core@7.26.0)(@babel/preset-env@7.26.0(@babel/core@7.26.0))(@types/react@18.3.12)(bufferutil@4.0.8)(react@18.3.1)(utf-8-validate@5.0.10))(react@18.3.1)
+      '@dynamic-labs/starknet':
+        specifier: ^4.0.0-alpha.38
+        version: 4.0.0-alpha.38(@dynamic-labs/types@4.0.0-alpha.38(eventemitter3@5.0.1))(bufferutil@4.0.8)(eventemitter3@5.0.1)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(utf-8-validate@5.0.10)
       '@hookform/resolvers':
         specifier: ^3.9.1
         version: 3.9.1(react-hook-form@7.53.2(react@18.3.1))
