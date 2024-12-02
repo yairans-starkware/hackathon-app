@@ -8,7 +8,7 @@ importers:
 
   .: {}
 
-  apps/foodiez:
+  apps/starkitchen:
     dependencies:
       '@catering-app/starknet-contract-connect':
         specifier: workspace:*

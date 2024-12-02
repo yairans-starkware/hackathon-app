@@ -7,7 +7,6 @@ export const ConnectWalletButton = ({onConnect}: {onConnect?: () => void}) => {
   const {setShowAuthFlow} = useDynamicContext();
 
   const onConnectWallet = () => {
-    console.log('@@@@@@@@@set')
     onConnect?.();
     setShowAuthFlow(true);
   }

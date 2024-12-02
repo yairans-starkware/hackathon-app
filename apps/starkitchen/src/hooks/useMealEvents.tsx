@@ -4,7 +4,7 @@ import { getStartMonthOfEventTracking, getTimestampForFirstDayOfMonth } from "..
 import { useStarknetWallet, useWalletEvents } from "@catering-app/starknet-contract-connect";
 import { useCateringContract } from "./useCateringContract";
 
-let fetched = false;
+// let fetched = false;
 export const useMealEvents = () => {
   const [mealEvents, setMealEvents] = useState<Meal[]>([]);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -45,9 +45,8 @@ export const useMealEvents = () => {
           cateringContract.read.get_events_infos_by_time({seconds: aYearAgoTimestampSeconds},{ seconds: aMonthFromNowTimestampSeconds }),
           starknetWallet?.address ? cateringContract.read.get_user_events_by_time(starknetWallet?.address, {seconds: aYearAgoTimestampSeconds},{ seconds: aMonthFromNowTimestampSeconds }) : Promise.resolve([]),
         ])
-        console.log('@@@@@@@@here!', isAdmin)
 
-        fetched = true;
+        // fetched = true;
         setIsAdmin(isAdminResponse);
         setIsAllowedUser(isAllowedUserResponse);
         setMealEvents(addUserParticipationToMealEvents(mealEventsResponse, userMealEventsResponse));
@@ -67,7 +66,7 @@ export const useMealEvents = () => {
 
   const futureMeals: Meal[] = mealEvents.filter((mealEvent) => Number(mealEvent.info.time.seconds) * 1000 > Date.now()).slice(0, 7);
   const pastMeals = mealEvents.filter((mealEvent) => Number(mealEvent.info.time.seconds) * 1000 <= Date.now());
-  console.log('@@@@@@@', isAdmin);
+
   return {
     isAdmin,
     pastMeals,

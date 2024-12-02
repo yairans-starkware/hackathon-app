@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Abi, Account, Contract, RpcProvider } from "starknet";
+import { Abi, Contract, RpcProvider } from "starknet";
 import { useStarknetWallet } from "./useStarknetWallet";
 
 export const SepoliaRPCProvider = new RpcProvider({
