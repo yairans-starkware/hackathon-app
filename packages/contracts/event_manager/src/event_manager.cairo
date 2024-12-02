@@ -8,7 +8,7 @@ use crate::utils::time::Time;
 /// Basic information about an event, to be stored in the contract.
 // TODO: Consider adding a name and description.
 #[derive(Drop, Serde, starknet::Store)]
-struct EventInfo {
+struct EventInfoInner {
     /// The time of the event, as a Unix timestamp.
     time: Time,
     /// The number of users registered to the event.
@@ -19,11 +19,11 @@ struct EventInfo {
 
 /// Basic information about an event, to be returned when querying the contract.
 #[derive(Drop, Serde)]
-struct EventInfoWithID {
+struct EventInfo {
     /// The ID of the event.
     id: usize,
     /// The information about the event.
-    info: EventInfo,
+    info: EventInfoInner,
 }
 
 
@@ -117,9 +117,9 @@ trait IRegistration<T> {
     ) -> Array<UserParticipation>;
 
     /// Gets the information of an event. Time will be 0 if the event does not exist.
-    fn event_info(self: @T, event_id: usize) -> EventInfo;
+    fn event_info(self: @T, event_id: usize) -> EventInfoInner;
     /// Gets the information of a range of events by their times. The range is [start, end).
-    fn get_events_infos_by_time(self: @T, start: Time, end: Time) -> Array<EventInfoWithID>;
+    fn get_events_infos_by_time(self: @T, start: Time, end: Time) -> Array<EventInfo>;
 
     /// Registers a user to an event. The user id is the caller address of the transaction.
     fn register(ref self: T, event_id: usize);
@@ -157,7 +157,7 @@ mod registration {
         MutableVecTrait
     };
     use super::{
-        EventInfo, EventUserInfo, RegistrationStatus, ExtededEventInfo, EventInfoWithID,
+        EventInfoInner, EventUserInfo, RegistrationStatus, ExtededEventInfo, EventInfo,
         UserParticipation, RegistrationStatusTrait, IRegistration, EventUserInfoInner
     };
     use core::dict::Felt252Dict;
@@ -166,7 +166,7 @@ mod registration {
     #[storage]
     struct Storage {
         /// A map from event ID to event information.
-        events: Map<usize, EventInfo>,
+        events: Map<usize, EventInfoInner>,
         /// A map from event ID to the users registered to the event. Users who unregistered are
         /// also included, and should be filtered out when needed.
         // TODO: Add this to the event info.
@@ -238,7 +238,8 @@ mod registration {
             self
                 .events
                 .write(
-                    n_events.into(), EventInfo { time, number_of_participants: 0, canceled: false }
+                    n_events.into(),
+                    EventInfoInner { time, number_of_participants: 0, canceled: false }
                 );
             n_events_ptr.write(event_id);
             self.events_by_day.entry(event_day).append().write(event_id.into());
@@ -416,13 +417,13 @@ mod registration {
             self._get_users_participation_summary(events.span())
         }
 
-        fn event_info(self: @ContractState, event_id: usize) -> EventInfo {
+        fn event_info(self: @ContractState, event_id: usize) -> EventInfoInner {
             self.events.read(event_id)
         }
 
         fn get_events_infos_by_time(
             self: @ContractState, start: Time, end: Time
-        ) -> Array<EventInfoWithID> {
+        ) -> Array<EventInfo> {
             let mut events = ArrayTrait::new();
             let start_day = start.day();
             let end_day = end.day();
@@ -435,7 +436,7 @@ mod registration {
                     let event_id = cur_day_events.at(i).read();
                     let event = self.events.read(event_id);
                     if event.time >= start && event.time < end {
-                        events.append(EventInfoWithID { id: event_id, info: event });
+                        events.append(EventInfo { id: event_id, info: event });
                     }
                 }
             };
