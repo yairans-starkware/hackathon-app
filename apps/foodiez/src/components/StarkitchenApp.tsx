@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Header } from './Header/Header';
 import { useStarknetWallet } from '@catering-app/starknet-contract-connect';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
@@ -12,8 +12,7 @@ import { ManagementTab } from './ManagementTab/ManagementTab';
 export const StarkitchenApp = () => {
   const starknetWallet = useStarknetWallet();
   const [activeTab, setActiveTab] = useState<string>(AppTabs.MEAL_REGISTRATION);
-  const {pastMeals, futureMeals, isAllowedUser, loadingAllEvents, isSuccessFetchingUserEvents, updateMeal, setSuccessFetchingUserEvents} = useMealEvents();
-
+  const {pastMeals, futureMeals, isAllowedUser, isAdmin, loadingAllEvents, isSuccessFetchingUserEvents, updateMeal, setSuccessFetchingUserEvents} = useMealEvents();
 
   const isWalletConnected = Boolean(starknetWallet);
 
@@ -35,7 +34,7 @@ export const StarkitchenApp = () => {
             <PieChart className="mr-2 h-4 w-4" />
             History & Stats
           </TabsTrigger>
-          <TabsTrigger value={AppTabs.MANAGEMENT}>
+          <TabsTrigger disabled={!isAdmin} value={AppTabs.MANAGEMENT}>
               <Users className="mr-2 h-4 w-4" />
               Management
             </TabsTrigger>

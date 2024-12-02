@@ -8,7 +8,6 @@ import { getCurrentDate, getMonthOptions, getTimestampForFirstDayOfMonth, getTim
 import {Input} from '../ui/input';
 import { useEffect, useMemo, useState } from "react";
 import { truncateAddress } from "../../utils/string";
-import { ReadCateringContract } from "../../providers/starknet-provider";
 import { exportJSONToCSV } from "../../utils/csv";
 import { ReportEnhancementData, ReportWallet } from "../../types/report";
 import { useCateringContract } from "../../hooks/useCateringContract";
@@ -22,7 +21,7 @@ export const ManagementTab = () => {
   const [selectedDate, setSelectedDate] = useState<string>(`${currentYear}-${currentMonth}`);
   const [searchTerm, setSearchTerm] = useState('');
   const monthOptions = getMonthOptions();
-  const contract = useCateringContract();
+  const cateringContract = useCateringContract();
 
   const handleLoadUserData = () => {
     const updatedReportWallets = [...reportWallets];
@@ -38,7 +37,7 @@ export const ManagementTab = () => {
   }
 
   const handleGrantAccess = async () => {
-    await contract?.add_allowed_user(newUserAddress);
+    await cateringContract?.write?.add_allowed_user(newUserAddress);
     setNewUserAddress('');
   }
 
@@ -50,7 +49,7 @@ export const ManagementTab = () => {
     const getReportData = async () => {
       const start = getTimestampForFirstDayOfMonth(selectedDate);
       const end = getTimestampForLastDayOfMonth(selectedDate);
-      const reportData = await ReadCateringContract.get_participation_report_by_time({seconds: Math.floor(start / 1000)}, {seconds: Math.floor(end / 1000)});
+      const reportData = await cateringContract.read.get_participation_report_by_time({seconds: Math.floor(start / 1000)}, {seconds: Math.floor(end / 1000)});
 
       setReportWallets(reportData.map(({user, n_participations}: { user: BigInt, n_participations: BigInt }) => ({
         user: "0x" + user.toString(16),

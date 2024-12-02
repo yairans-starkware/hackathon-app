@@ -1,15 +1,17 @@
 import { useCallback, useEffect, useState } from "react";
-import { ReadCateringContract } from "../providers/starknet-provider";
 import { Meal } from "../types/meal";
 import { getStartMonthOfEventTracking, getTimestampForFirstDayOfMonth } from "../utils/date";
 import { useStarknetWallet, useWalletEvents } from "@catering-app/starknet-contract-connect";
+import { useCateringContract } from "./useCateringContract";
 
 let fetched = false;
 export const useMealEvents = () => {
   const [mealEvents, setMealEvents] = useState<Meal[]>([]);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [isAllowedUser, setIsAllowedUser] = useState<boolean>();
   const [loadingAllEvents, setLoadingAllEvents] = useState(true);
   const [isSuccessFetchingUserEvents, setSuccessFetchingUserEvents] = useState(false);
+  const cateringContract = useCateringContract();
 
   const starknetWallet = useStarknetWallet();
   const {isFullyLoaded} = useWalletEvents();
@@ -34,17 +36,21 @@ export const useMealEvents = () => {
       const aYearAgoTimestampSeconds = getTimestampForFirstDayOfMonth(getStartMonthOfEventTracking());
       const aMonthFromNowTimestampSeconds = Math.floor(Date.now() / 1000) + 30 * 24 * 60 * 60;
       try {
-        if (fetched) {
-          return;
-        }
-        const [isAllowedUserData, mealEventsData, userMealEventsData] = await Promise.all([
-          starknetWallet?.address ? ReadCateringContract?.is_allowed_user(starknetWallet?.address) : Promise.resolve(false),
-          ReadCateringContract.get_events_infos_by_time({seconds: aYearAgoTimestampSeconds},{ seconds: aMonthFromNowTimestampSeconds }),
-          starknetWallet?.address ? ReadCateringContract.get_user_events_by_time(starknetWallet?.address, {seconds: aYearAgoTimestampSeconds},{ seconds: aMonthFromNowTimestampSeconds }) : Promise.resolve([]),
+        // if (fetched) {
+        //   return;
+        // }
+        const [isAdminResponse, isAllowedUserResponse, mealEventsResponse, userMealEventsResponse] = await Promise.all([
+          starknetWallet?.address ? cateringContract?.read.is_admin(starknetWallet?.address) : Promise.resolve(false),
+          starknetWallet?.address ? cateringContract.read?.is_allowed_user(starknetWallet?.address) : Promise.resolve(false),
+          cateringContract.read.get_events_infos_by_time({seconds: aYearAgoTimestampSeconds},{ seconds: aMonthFromNowTimestampSeconds }),
+          starknetWallet?.address ? cateringContract.read.get_user_events_by_time(starknetWallet?.address, {seconds: aYearAgoTimestampSeconds},{ seconds: aMonthFromNowTimestampSeconds }) : Promise.resolve([]),
         ])
+        console.log('@@@@@@@@here!', isAdmin)
+
         fetched = true;
-        setIsAllowedUser(isAllowedUserData);
-        setMealEvents(addUserParticipationToMealEvents(mealEventsData, userMealEventsData));
+        setIsAdmin(isAdminResponse);
+        setIsAllowedUser(isAllowedUserResponse);
+        setMealEvents(addUserParticipationToMealEvents(mealEventsResponse, userMealEventsResponse));
         setLoadingAllEvents(false);
         if (starknetWallet?.address) {
           setSuccessFetchingUserEvents(true);
@@ -61,9 +67,10 @@ export const useMealEvents = () => {
 
   const futureMeals: Meal[] = mealEvents.filter((mealEvent) => Number(mealEvent.info.time.seconds) * 1000 > Date.now()).slice(0, 7);
   const pastMeals = mealEvents.filter((mealEvent) => Number(mealEvent.info.time.seconds) * 1000 <= Date.now());
-
+  console.log('@@@@@@@', isAdmin);
   return {
-    pastMeals, 
+    isAdmin,
+    pastMeals,
     futureMeals, 
     isAllowedUser, 
     loadingAllEvents,

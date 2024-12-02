@@ -6,3 +6,4 @@ export {
   useWalletEvents,
 }
 export  {useUserWallets} from '@dynamic-labs/sdk-react-core';
+export * from './useContract';

@@ -26,7 +26,7 @@ export const MealCard = ({
   isAllowedUser?: boolean,
   isNextMeal?: boolean 
 }) => {
-  const contract = useCateringContract();
+  const cateringContract = useCateringContract();
 
   const formatDate = (date: Date) => {
     return date.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })
@@ -37,13 +37,13 @@ export const MealCard = ({
     try {
       if (meal.info.registered) {
         closeFullscreenLoader = openFullscreenLoader('Unregistering you from meal...');
-        const {transaction_hash} = await contract?.unregister(meal.id);
-        await contract?.providerOrAccount?.waitForTransaction(transaction_hash, { retryInterval: 2e3 });
+        const {transaction_hash} = await cateringContract?.write?.unregister(meal.id);
+        await cateringContract?.write?.providerOrAccount?.waitForTransaction(transaction_hash, { retryInterval: 2e3 });
         updateMeal?.(meal.id);
       } else if (isAllowedUser) {
         closeFullscreenLoader = openFullscreenLoader('Booking you up...');
-        const {transaction_hash} = await contract?.register(meal.id);
-        await contract?.providerOrAccount?.waitForTransaction(transaction_hash, { retryInterval: 2e3 });
+        const {transaction_hash} = await cateringContract?.write?.register(meal.id);
+        await cateringContract?.write?.providerOrAccount?.waitForTransaction(transaction_hash, { retryInterval: 2e3 });
         updateMeal?.(meal.id);
       }
     } catch (e) {
