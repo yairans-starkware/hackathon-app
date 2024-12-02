@@ -87,6 +87,7 @@ const WalletDetails = () => {
 };
 
 export default WalletDetails;
+```
 
 ### 4. Listen to Wallet Events
 
@@ -121,19 +122,19 @@ import { useContract } from '@workspaces-name/starknet-contract-connect';
 const abi = [/* ABI definition here */];
 const contractAddress = "0xYourContractAddress";
 
-const ContractInteraction = () => {
+const useMyAmazingContract = () => {
   const { write, read } = useContract({ abi, address: contractAddress });
 
   useEffect(() => {
     const fetchData = async () => {
-      const data = await read?.methods.yourReadFunction().call();
+      const data = await read?.yourReadFunction(/*your arguments*/);
       console.log(data);
     };
     fetchData();
   }, [read]);
 
   const writeData = async () => {
-    await write?.methods.yourWriteFunction("value").send();
+    await write?.yourWriteFunction(/*your arguments*/);
   };
 
   return (
