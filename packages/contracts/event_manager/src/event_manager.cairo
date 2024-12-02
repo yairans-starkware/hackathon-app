@@ -5,7 +5,7 @@ use starknet::ContractAddress;
 use crate::utils::time::Time;
 
 
-/// Basic information about an event.
+/// Basic information about an event, to be stored in the contract.
 // TODO: Consider adding a name and description.
 #[derive(Drop, Serde, starknet::Store)]
 struct EventInfo {
@@ -15,8 +15,21 @@ struct EventInfo {
     number_of_participants: usize,
 }
 
+/// Basic information about an event, to be returned when querying the contract.
+#[derive(Drop, Serde)]
+struct EventInfoWithID {
+    /// The ID of the event.
+    id: usize,
+    /// The information about the event.
+    info: EventInfo,
+}
+
+
+/// Extended information about an event.
 #[derive(Drop, Serde)]
 struct ExtededEventInfo {
+    /// The id of the event.
+    id: usize,
     /// The time of the event, as a Unix timestamp.
     time: Time,
     /// The users registered to the event.
@@ -73,6 +86,7 @@ impl RegistrationStatusImpl of RegistrationStatusTrait {
 trait IRegistration<T> {
     /// Returns information about the events the user is registered to, within a time range. The
     /// range is [start, end).
+    // TODO: Get rid of the user parameter, and use starknet::get_caller_address() instead.
     fn get_user_events_by_time(
         self: @T, user: ContractAddress, start: Time, end: Time
     ) -> Array<EventUserInfo>;
@@ -88,7 +102,7 @@ trait IRegistration<T> {
     /// Gets the information of an event. Time will be 0 if the event does not exist.
     fn event_info(self: @T, event_id: usize) -> EventInfo;
     /// Gets the information of a range of events by their times. The range is [start, end).
-    fn get_events_infos_by_time(self: @T, start: Time, end: Time) -> Array<EventInfo>;
+    fn get_events_infos_by_time(self: @T, start: Time, end: Time) -> Array<EventInfoWithID>;
 
     /// Registers a user to an event. The user id is the caller address of the transaction.
     fn register(ref self: T, event_id: usize);
@@ -130,7 +144,7 @@ mod registration {
     use starknet::storage::StoragePointerWriteAccess;
     use starknet::storage::StoragePointerReadAccess;
     use starknet::storage::StorageMapWriteAccess;
-    use super::{EventInfo, EventUserInfo, RegistrationStatus, ExtededEventInfo};
+    use super::{EventInfo, EventUserInfo, RegistrationStatus, ExtededEventInfo, EventInfoWithID};
     use starknet::ContractAddress;
     use starknet::storage::{Map, Vec};
 
@@ -285,7 +299,7 @@ mod registration {
                 }
             };
             let canceled = self.event_canceled.read(event_id);
-            ExtededEventInfo { time: event.time, participants, canceled }
+            ExtededEventInfo { id: event_id, time: event.time, participants, canceled }
         }
     }
 
@@ -358,7 +372,7 @@ mod registration {
 
         fn get_events_infos_by_time(
             self: @ContractState, start: Time, end: Time
-        ) -> Array<EventInfo> {
+        ) -> Array<EventInfoWithID> {
             let mut events = ArrayTrait::new();
             let start_day = start.day();
             let end_day = end.day();
@@ -371,7 +385,7 @@ mod registration {
                         let event_id = cur_day_events.at(i).read();
                         let event = self.events.read(event_id);
                         if event.time >= start && event.time < end {
-                            events.append(event);
+                            events.append(EventInfoWithID { id: event_id, info: event });
                         }
                     }
                 };
