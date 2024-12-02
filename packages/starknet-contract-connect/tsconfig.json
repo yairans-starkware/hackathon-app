@@ -1,8 +1,8 @@
 {
   "compilerOptions": {
+    "jsx": "react-jsx",
     "target": "ES2015",
     "module": "ESNext",
-    "jsx": "react",
     "strict": true,
     "declaration": true,
     "declarationMap": true,
