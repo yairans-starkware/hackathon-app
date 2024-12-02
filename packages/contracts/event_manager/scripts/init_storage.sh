@@ -19,7 +19,7 @@ SECONDS_IN_DAY=60*60*24
 SECONDS_IN_WEEK=60*60*24*7
 for i in {0..52}
 do
-  starkli invoke $CONTRACT_ADDRESS add_event $((BASE_TIME + i * SECONDS_IN_WEEK)) && sleep 15
-  starkli invoke $CONTRACT_ADDRESS add_event $((BASE_TIME + i * SECONDS_IN_WEEK + SECONDS_IN_DAY)) && sleep 15
-  starkli invoke $CONTRACT_ADDRESS add_event $((BASE_TIME + i * SECONDS_IN_WEEK + 2 * SECONDS_IN_DAY)) && sleep 15
+  starkli invoke $CONTRACT_ADDRESS add_event $((BASE_TIME + i * SECONDS_IN_WEEK)) str:Aviv_Moshe && sleep 15
+  starkli invoke $CONTRACT_ADDRESS add_event $((BASE_TIME + i * SECONDS_IN_WEEK + SECONDS_IN_DAY)) str:Hashuka && sleep 15
+  starkli invoke $CONTRACT_ADDRESS add_event $((BASE_TIME + i * SECONDS_IN_WEEK + 2 * SECONDS_IN_DAY)) str:Shimi && sleep 15
 done
