@@ -22,7 +22,7 @@ export const StarkitchenApp = () => {
 
   return (
     <div className="min-h-screen w-screen bg-gray-100">
-      <Header foodieRank={foodieRank ?? -1} wallet={starknetWallet} isConnected={isWalletConnected} onConnectWallet={onConnectWallet} />
+      <Header wallet={starknetWallet} isConnected={isWalletConnected} onConnectWallet={onConnectWallet} />
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
         <TabsList>
