@@ -23,7 +23,7 @@ export const StatsTab = ({
   const selectedMonthStats = monthlyStats.find(stat => stat.month === selectedDate);
   
   const mealCount = Object.values(selectedMonthStats?.mealsByDay ?? {}).reduce((mealsCount, acc) => mealsCount + acc, 0);
-  
+
   return (
     <>
       <div className="flex justify-between items-center">
@@ -49,7 +49,7 @@ export const StatsTab = ({
               <h3 className="text-xl font-semibold mb-4">Past Meals</h3>
               <div className="space-y-4">
                 {(mealsGroupedByMonth[selectedDate] ?? []).map((meal) => (
-                    <MealCard key={meal.id} meal={meal} isPastMeal  />
+                    <MealCard isWalletConnected key={meal.id} meal={meal} isPastMeal  />
                   )
                 )}
               </div>

@@ -1,6 +1,6 @@
 import { Button } from "../ui/button"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "../ui/card"
-import { AlertCircle, Check, X } from "lucide-react"
+import { AlertCircle, Check, Users, X } from "lucide-react"
 import { Badge } from '../ui/badge'
 import { Meal } from "../../types/meal"
 import { useCateringContract } from "../../hooks/useCateringContract"
@@ -18,7 +18,7 @@ export const MealCard = ({
   isNextMeal = false 
 }: { 
   meal: Meal,
-  isPastMeal?: boolean; 
+  isPastMeal?: boolean;
   isWalletConnected?: boolean,
   isSuccessFetchingUserEvents?: boolean;
   onConnectWallet?: () => void,
@@ -41,7 +41,7 @@ export const MealCard = ({
         await cateringContract?.write?.providerOrAccount?.waitForTransaction(transaction_hash, { retryInterval: 2e3 });
         updateMeal?.(meal.id);
       } else if (isAllowedUser) {
-        closeFullscreenLoader = openFullscreenLoader('Booking you up...');
+        closeFullscreenLoader = openFullscreenLoader('Registering you to the selected meal...');
         const {transaction_hash} = await cateringContract?.write?.register(meal.id);
         await cateringContract?.write?.providerOrAccount?.waitForTransaction(transaction_hash, { retryInterval: 2e3 });
         updateMeal?.(meal.id);
@@ -57,7 +57,7 @@ export const MealCard = ({
   <Card>
     <CardHeader>
       <CardTitle className="flex justify-between items-center min-h-[30px]">
-        {isNextMeal ? 'Next Meal' : isPastMeal ? 'Past Meal' : 'Future Meal'}
+        {isNextMeal ? 'Next Meal' : isPastMeal ? 'Meal Ended' : 'Future Meal'}
         {meal.info.registered ? (
           <Badge variant="secondary" className="ml-2">
             Registered
@@ -67,6 +67,12 @@ export const MealCard = ({
     </CardHeader>
     <CardContent>
       <p className="text-2xl font-semibold">{formatDate(new Date(Number(meal.info.time.seconds) * 1000))}</p>
+      {meal?.info?.number_of_participants !== undefined ? (
+        <p className="text-sm text-gray-500 mt-2">
+        <Users className="inline-block mr-1 h-4 w-4" />
+        {Number(meal.info.number_of_participants)} registered
+      </p>
+    ) : null}
       {isWalletConnected && !isAllowedUser && isSuccessFetchingUserEvents && !meal.info.registered ? (
         <div className="flex items-center mt-2 text-red-500">
           <AlertCircle className="w-4 h-4 mr-2" />
@@ -74,8 +80,7 @@ export const MealCard = ({
         </div>
       ) : null}
     </CardContent>
-    {isPastMeal ? null : (
-      <CardFooter>
+    <CardFooter>
       {isWalletConnected ? (
         <Button
           className={`w-full ${meal.info.registered ? 'bg-red-500 hover:bg-red-600 text-white' : ''}`} 
@@ -97,6 +102,6 @@ export const MealCard = ({
       ) : (
         <ConnectWalletButton onConnect={onConnectWallet} />
       )}
-    </CardFooter>)}
+    </CardFooter>
   </Card>
 )}

@@ -48,7 +48,7 @@ export const mealCountByDay = (meals: Meal[]): { [key: string]: number } => {
   };
 
   meals.forEach(({info: {time}}) => {
-    const date = new Date(Number(time.seconds));
+    const date = new Date(Number(time.seconds) * 1000);
     const dayOfWeek = date.toLocaleString('en-US', { weekday: 'long' }) as keyof typeof daysOfWeek;
     if (daysOfWeek.hasOwnProperty(dayOfWeek)) {
       daysOfWeek[dayOfWeek]++;

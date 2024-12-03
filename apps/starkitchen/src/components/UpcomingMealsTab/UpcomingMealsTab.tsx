@@ -39,7 +39,16 @@ export const UpcomingMealsTab = ({
         <h2 className="text-2xl font-bold mb-6 mt-12">Past Meals</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {loadingAllEvents ? Array(6).fill(null).map((_,index) => <MealCardSkeleton key={index} />) : pastMeals.reverse().slice(0, 6).map((meal, index) => (
-            <MealCard isSuccessFetchingUserEvents={isSuccessFetchingUserEvents} updateMeal={updateMeal} onConnectWallet={onConnectWallet} isAllowedUser={isAllowedUser} key={meal.id ?? index} meal={meal} isWalletConnected={isWalletConnected} />
+            <MealCard 
+              isSuccessFetchingUserEvents={isSuccessFetchingUserEvents} 
+              isPastMeal
+              updateMeal={updateMeal} 
+              onConnectWallet={onConnectWallet} 
+              isAllowedUser={isAllowedUser} 
+              key={meal.id ?? index} 
+              meal={meal} 
+              isWalletConnected={isWalletConnected} 
+            />
           ))}
         </div>
       </div>
