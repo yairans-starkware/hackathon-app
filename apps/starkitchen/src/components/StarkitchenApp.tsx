@@ -6,13 +6,13 @@ import { Calendar, PieChart, Users } from 'lucide-react';
 import { AppTabs } from '../types/ui';
 import { UpcomingMealsTab } from './UpcomingMealsTab/UpcomingMealsTab';
 import { StatsTab } from './StatsTab/StatsTab';
-import { useMealEvents } from '../hooks/useMealEvents';
+import { useMealData } from '../hooks/useMealData';
 import { ManagementTab } from './ManagementTab/ManagementTab';
 
 export const StarkitchenApp = () => {
   const starknetWallet = useStarknetWallet();
   const [activeTab, setActiveTab] = useState<string>(AppTabs.MEAL_REGISTRATION);
-  const {pastMeals, futureMeals, isAllowedUser, isAdmin, loadingAllEvents, isSuccessFetchingUserEvents, foodieRank, updateMeal, setSuccessFetchingUserEvents} = useMealEvents();
+  const {pastMeals, futureMeals, isAllowedUser, foodieRank, allTimeMealCount, isAdmin, loadingAllEvents, isSuccessFetchingUserEvents, updateMeal, setSuccessFetchingUserEvents} = useMealData();
 
   const isWalletConnected = Boolean(starknetWallet);
 
@@ -54,6 +54,8 @@ export const StarkitchenApp = () => {
         </TabsContent>
         <TabsContent value={AppTabs.STATS_AND_PREV_MEALS} className="space-y-12">
           <StatsTab
+            foodieRank={foodieRank}
+            allTimeMealCount={allTimeMealCount}
             setActiveTab={setActiveTab}
             meals={pastMeals}
           />

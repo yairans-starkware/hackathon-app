@@ -5,5 +5,6 @@ export type Meal = {
     number_of_participants: number;
     registered?: boolean;
     canceled?: boolean;
+    description?: string;
   }
 }

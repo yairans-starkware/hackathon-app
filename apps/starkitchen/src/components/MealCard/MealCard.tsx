@@ -1,11 +1,12 @@
 import { Button } from "../ui/button"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "../ui/card"
-import { AlertCircle, Check, Users, X } from "lucide-react"
+import { AlertCircle, Check, Users, UtensilsCrossed, X } from "lucide-react"
 import { Badge } from '../ui/badge'
 import { Meal } from "../../types/meal"
 import { useCateringContract } from "../../hooks/useCateringContract"
 import { openFullscreenLoader } from "../FullscreenLoaderModal/FullscreenLoaderModal"
 import { ConnectWalletButton } from "@catering-app/starknet-contract-connect"
+import { feltToString } from "../../utils/cairo"
 
 export const MealCard = ({ 
   meal,
@@ -73,6 +74,10 @@ export const MealCard = ({
         {Number(meal.info.number_of_participants)} registered
       </p> 
     ) : null}
+    <p className="text-sm text-gray-700 mt-2">
+      <UtensilsCrossed className="inline-block mr-1 h-4 w-4" />
+      Catering: {feltToString(meal.info?.description ?? '') ?? 'Not Set Yet'}
+    </p>
       {isWalletConnected && !isAllowedUser && isSuccessFetchingUserEvents && !meal.info.registered ? (
         <div className="flex items-center mt-2 text-red-500">
           <AlertCircle className="w-4 h-4 mr-2" />

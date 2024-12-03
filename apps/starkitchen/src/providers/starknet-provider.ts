@@ -1,7 +1,7 @@
 import { RpcProvider, Contract } from "starknet";
 import CateringAbi from './catering-abi.json'
 
-export const CONTRACT_ADDRESS = '0x065493c28778c5deb6f2c5f39424c0907e39e5949ab6f4b8b39cdc87364b8aa6';
+export const CONTRACT_ADDRESS = '0x049c75609bb077a9427bc26a9935472ec75e5508ed216ef7f7ad2693397deebc';
 
 export const SepoliaRPCProvider = new RpcProvider({
   // nodeUrl: "https://free-rpc.nethermind.io/sepolia-juno/v0_7",

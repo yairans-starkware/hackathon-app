@@ -13,7 +13,7 @@ export const Header = ({
   wallet,
 }: {
   isConnected: boolean;
-  foodieRank: number;
+  foodieRank?: number;
   onConnectWallet: () => void;
   wallet?: Wallet<any>,
 }) => {

@@ -12,7 +12,11 @@ const {month: currentMonth, year: currentYear} = getCurrentDate();
 export const StatsTab = ({
   setActiveTab,
   meals,
+  foodieRank,
+  allTimeMealCount,
 }: {
+  foodieRank?: number,
+  allTimeMealCount?: number,
   meals: Meal[],
   setActiveTab: React.Dispatch<React.SetStateAction<string>>,
 }) => {
@@ -41,22 +45,23 @@ export const StatsTab = ({
           </SelectContent>
         </Select>
       </div>
-      {mealCount === 0 ? (
-        <EmptyStatsCard setActiveTab={setActiveTab} />
-      ) : (
+      
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <div>
-              <h3 className="text-xl font-semibold mb-4">Past Meals</h3>
-              <div className="space-y-4">
-                {(mealsGroupedByMonth[selectedDate] ?? []).map((meal) => (
-                    <MealCard isWalletConnected key={meal.id} meal={meal} isPastMeal  />
-                  )
-                )}
+            {mealCount === 0 ? (
+              <EmptyStatsCard setActiveTab={setActiveTab} />
+            ) : (
+              <div>
+                <h3 className="text-xl font-semibold mb-4">Past Meals</h3>
+                <div className="space-y-4">
+                  {(mealsGroupedByMonth[selectedDate] ?? []).map((meal) => (
+                      <MealCard isWalletConnected key={meal.id} meal={meal} isPastMeal  />
+                    )
+                  )}
+                </div>
               </div>
-            </div>
-            <StatsCard stats={selectedMonthStats} />
+            )}
+            <StatsCard allTimeMealCount={allTimeMealCount} foodieRank={foodieRank} stats={selectedMonthStats} />
         </div>
-      )}
     </>
   )
 }

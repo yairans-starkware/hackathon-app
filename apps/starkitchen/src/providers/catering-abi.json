@@ -75,7 +75,7 @@
     ]
   },
   {
-    "name": "event_manager::event_manager::EventInfo",
+    "name": "event_manager::event_manager::EventInfoInner",
     "type": "struct",
     "members": [
       {
@@ -89,11 +89,19 @@
       {
         "name": "canceled",
         "type": "core::bool"
+      },
+      {
+        "name": "locked",
+        "type": "core::bool"
+      },
+      {
+        "name": "description",
+        "type": "core::felt252"
       }
     ]
   },
   {
-    "name": "event_manager::event_manager::EventInfoWithID",
+    "name": "event_manager::event_manager::EventInfo",
     "type": "struct",
     "members": [
       {
@@ -102,7 +110,7 @@
       },
       {
         "name": "info",
-        "type": "event_manager::event_manager::EventInfo"
+        "type": "event_manager::event_manager::EventInfoInner"
       }
     ]
   },
@@ -186,7 +194,7 @@
         ],
         "outputs": [
           {
-            "type": "event_manager::event_manager::EventInfo"
+            "type": "event_manager::event_manager::EventInfoInner"
           }
         ],
         "state_mutability": "view"
@@ -206,7 +214,7 @@
         ],
         "outputs": [
           {
-            "type": "core::array::Array::<event_manager::event_manager::EventInfoWithID>"
+            "type": "core::array::Array::<event_manager::event_manager::EventInfo>"
           }
         ],
         "state_mutability": "view"
@@ -242,6 +250,10 @@
           {
             "name": "time",
             "type": "core::felt252"
+          },
+          {
+            "name": "description",
+            "type": "core::felt252"
           }
         ],
         "outputs": [],
@@ -258,6 +270,30 @@
           {
             "name": "time",
             "type": "core::felt252"
+          }
+        ],
+        "outputs": [],
+        "state_mutability": "external"
+      },
+      {
+        "name": "lock_event",
+        "type": "function",
+        "inputs": [
+          {
+            "name": "event_id",
+            "type": "core::integer::u32"
+          }
+        ],
+        "outputs": [],
+        "state_mutability": "external"
+      },
+      {
+        "name": "unlock_event",
+        "type": "function",
+        "inputs": [
+          {
+            "name": "event_id",
+            "type": "core::integer::u32"
           }
         ],
         "outputs": [],
