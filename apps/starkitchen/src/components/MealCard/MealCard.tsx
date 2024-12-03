@@ -71,7 +71,7 @@ export const MealCard = ({
         <p className="text-sm text-gray-500 mt-2">
         <Users className="inline-block mr-1 h-4 w-4" />
         {Number(meal.info.number_of_participants)} registered
-      </p>
+      </p> 
     ) : null}
       {isWalletConnected && !isAllowedUser && isSuccessFetchingUserEvents && !meal.info.registered ? (
         <div className="flex items-center mt-2 text-red-500">
@@ -83,7 +83,7 @@ export const MealCard = ({
     <CardFooter>
       {isWalletConnected ? (
         <Button
-          className={`w-full ${meal.info.registered ? 'bg-red-500 hover:bg-red-600 text-white' : ''}`} 
+          className={`w-full ${meal.info.registered ? 'text-red-500 border-red-500 bg-red-50 hover:text-red-500 hover:border-red-500 hover:bg-red-100' : ''}`} 
           onClick={handleRegistration}
           disabled={isWalletConnected && !isAllowedUser && !meal.info.registered}
         >
