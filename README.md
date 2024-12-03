@@ -52,6 +52,8 @@ Follow these steps to get started with the monorepo and set up your project:
        pnpm run dev:starkitchen
        ```
 
+10. **Check your deployed up**
+    - You can see your app live on {your-github-username}.github.io/{repo-name} for example: gilbens-starkware.github.io/catering-app
 ---
 
 ### IMPORTANT: Deployment

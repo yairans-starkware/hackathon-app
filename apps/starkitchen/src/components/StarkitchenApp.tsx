@@ -12,7 +12,7 @@ import { ManagementTab } from './ManagementTab/ManagementTab';
 export const StarkitchenApp = () => {
   const starknetWallet = useStarknetWallet();
   const [activeTab, setActiveTab] = useState<string>(AppTabs.MEAL_REGISTRATION);
-  const {pastMeals, futureMeals, isAllowedUser, isAdmin, loadingAllEvents, isSuccessFetchingUserEvents, updateMeal, setSuccessFetchingUserEvents} = useMealEvents();
+  const {pastMeals, futureMeals, isAllowedUser, isAdmin, loadingAllEvents, isSuccessFetchingUserEvents, foodieRank, updateMeal, setSuccessFetchingUserEvents} = useMealEvents();
 
   const isWalletConnected = Boolean(starknetWallet);
 
@@ -22,7 +22,7 @@ export const StarkitchenApp = () => {
 
   return (
     <div className="min-h-screen w-screen bg-gray-100">
-      <Header wallet={starknetWallet} isConnected={isWalletConnected} onConnectWallet={onConnectWallet} />
+      <Header foodieRank={foodieRank ?? -1} wallet={starknetWallet} isConnected={isWalletConnected} onConnectWallet={onConnectWallet} />
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
         <TabsList>

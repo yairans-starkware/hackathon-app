@@ -22,7 +22,6 @@ export const StatsCard = ({
         <CardTitle>Monthly Statistics</CardTitle>
       </CardHeader>
       <CardContent>
-        <p className="text-lg font-semibold mb-4">Tokens Spent: ${stats.tokensSpent.toFixed(2)}</p>
         <div className="p-0">
             <ChartContainer
               config={{

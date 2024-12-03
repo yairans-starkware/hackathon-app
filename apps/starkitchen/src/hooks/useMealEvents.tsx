@@ -11,6 +11,7 @@ export const useMealEvents = () => {
   const [isAllowedUser, setIsAllowedUser] = useState<boolean>();
   const [loadingAllEvents, setLoadingAllEvents] = useState(true);
   const [isSuccessFetchingUserEvents, setSuccessFetchingUserEvents] = useState(false);
+  const [foodieRank, setFoodieRank] = useState<number>();
   const cateringContract = useCateringContract();
 
   const starknetWallet = useStarknetWallet();
@@ -39,7 +40,8 @@ export const useMealEvents = () => {
         // if (fetched) {
         //   return;
         // }
-        const [isAdminResponse, isAllowedUserResponse, mealEventsResponse, userMealEventsResponse] = await Promise.all([
+        const [allTimeReportResponse, isAdminResponse, isAllowedUserResponse, mealEventsResponse, userMealEventsResponse] = await Promise.all([
+          starknetWallet?.address ? cateringContract?.read.get_participation_report_by_time({seconds: 0}, {seconds: Math.floor(Date.now() / 1000)}) : Promise.resolve(null),
           starknetWallet?.address ? cateringContract?.read.is_admin(starknetWallet?.address) : Promise.resolve(false),
           starknetWallet?.address ? cateringContract.read?.is_allowed_user(starknetWallet?.address) : Promise.resolve(false),
           cateringContract.read.get_events_infos_by_time({seconds: aYearAgoTimestampSeconds},{ seconds: aMonthFromNowTimestampSeconds }),
@@ -51,6 +53,7 @@ export const useMealEvents = () => {
         setIsAllowedUser(isAllowedUserResponse);
         setMealEvents(addUserParticipationToMealEvents(mealEventsResponse, userMealEventsResponse));
         setLoadingAllEvents(false);
+        setFoodieRank(findOverallRankFromReport(allTimeReportResponse, starknetWallet.address));
         if (starknetWallet?.address) {
           setSuccessFetchingUserEvents(true);
         }
@@ -70,6 +73,7 @@ export const useMealEvents = () => {
   return {
     isAdmin,
     pastMeals,
+    foodieRank,
     futureMeals, 
     isAllowedUser, 
     loadingAllEvents,
@@ -93,4 +97,8 @@ const addUserParticipationToMealEvents = (mealEvents: Meal[], userMealEvents: Me
       } 
     })
   }
+}
+
+const findOverallRankFromReport = (walletReport: {user: BigInt; n_participations: BigInt}[], user: string) => {
+  return walletReport.sort(({n_participations: nParticipationsUserA}, {n_participations: nParticipationsUserB}) => nParticipationsUserA < nParticipationsUserB ? 1 : -1).findIndex(({user: trimmedUserAddress}) => user.includes(trimmedUserAddress.toString(16))) + 1;
 }

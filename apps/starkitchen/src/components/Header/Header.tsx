@@ -7,11 +7,13 @@ import { truncateAddress } from "../../utils/string";
 import { ConnectWalletButton, useWalletEvents, Wallet } from "@catering-app/starknet-contract-connect";
 
 export const Header = ({
-  isConnected, 
+  isConnected,
+  foodieRank,
   onConnectWallet,
   wallet,
 }: {
   isConnected: boolean;
+  foodieRank: number;
   onConnectWallet: () => void;
   wallet?: Wallet<any>,
 }) => {
@@ -42,6 +44,9 @@ export const Header = ({
             <div className="flex items-center space-x-4">
                 {isConnected ? (
                 <div className="flex flex-col md:flex-row items-center space-y-2 md:space-y-0 md:space-x-4">
+                  {foodieRank > 0 ? <span className="text-sm font-medium text-gray-500">
+                    {`Foodie Rank: ${foodieRank}`}
+                  </span> : null}
                   <span className="text-sm font-medium text-gray-500">
                     {truncateAddress(wallet?.address ?? '')}
                   </span>
