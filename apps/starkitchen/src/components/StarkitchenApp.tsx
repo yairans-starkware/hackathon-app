@@ -34,10 +34,12 @@ export const StarkitchenApp = () => {
             <PieChart className="mr-2 h-4 w-4" />
             History & Stats
           </TabsTrigger>
-          <TabsTrigger disabled={!isAdmin} value={AppTabs.MANAGEMENT}>
+          {isAdmin ? (
+            <TabsTrigger value={AppTabs.MANAGEMENT}>
               <Users className="mr-2 h-4 w-4" />
               Management
             </TabsTrigger>
+          ) : null}
         </TabsList>
         <TabsContent value={AppTabs.MEAL_REGISTRATION} className="space-y-12">
           <UpcomingMealsTab
@@ -60,9 +62,11 @@ export const StarkitchenApp = () => {
             meals={pastMeals}
           />
         </TabsContent>
-        <TabsContent value={AppTabs.MANAGEMENT} className="space-y-12">
+        {isAdmin ? (
+          <TabsContent value={AppTabs.MANAGEMENT} className="space-y-12">
           <ManagementTab />  
         </TabsContent>
+        ) : null}
       </Tabs>
       </main>
     </div>

@@ -4,7 +4,6 @@ import { getStartMonthOfEventTracking, getTimestampForFirstDayOfMonth } from "..
 import { useStarknetWallet, useWalletEvents } from "@catering-app/starknet-contract-connect";
 import { useCateringContract } from "./useCateringContract";
 
-let fetched = false;
 export const useMealData = () => {
   const [mealEvents, setMealEvents] = useState<Meal[]>([]);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -40,9 +39,6 @@ export const useMealData = () => {
       const aYearAgoTimestampSeconds = getTimestampForFirstDayOfMonth(getStartMonthOfEventTracking());
       const aMonthFromNowTimestampSeconds = Math.floor(Date.now() / 1000) + 30 * 24 * 60 * 60;
       try {
-        if (fetched) {
-          return;
-        }
         const [allTimeReportResponse, isAdminResponse, isAllowedUserResponse, mealEventsResponse, userMealEventsResponse] = await Promise.all([
           starknetWallet?.address ? cateringContract?.read.get_participation_report_by_time({seconds: 0}, {seconds: Math.floor(Date.now() / 1000)}) : Promise.resolve(null),
           starknetWallet?.address ? cateringContract?.read.is_admin(starknetWallet?.address) : Promise.resolve(false),
@@ -51,7 +47,6 @@ export const useMealData = () => {
           starknetWallet?.address ? cateringContract.read.get_user_events_by_time(starknetWallet?.address, {seconds: aYearAgoTimestampSeconds},{ seconds: aMonthFromNowTimestampSeconds }) : Promise.resolve([]),
         ])
 
-        fetched = true;
         const {foodieRank: foodieRankData, allTimeMealCount: allTimeMealCountData} = starknetWallet?.address ? extractGlobalStatsFromReport(allTimeReportResponse, starknetWallet?.address) : { foodieRank: 0, allTimeMealCount: 0};
         setIsAdmin(isAdminResponse);
         setIsAllowedUser(isAllowedUserResponse);
