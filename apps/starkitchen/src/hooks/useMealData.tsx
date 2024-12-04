@@ -52,7 +52,7 @@ export const useMealData = () => {
         ])
 
         fetched = true;
-        const {foodieRank: foodieRankData, allTimeMealCount: allTimeMealCountData} = extractGlobalStatsFromReport(allTimeReportResponse, starknetWallet.address);
+        const {foodieRank: foodieRankData, allTimeMealCount: allTimeMealCountData} = starknetWallet?.address ? extractGlobalStatsFromReport(allTimeReportResponse, starknetWallet?.address) : { foodieRank: 0, allTimeMealCount: 0};
         setIsAdmin(isAdminResponse);
         setIsAllowedUser(isAllowedUserResponse);
         setMealEvents(addUserParticipationToMealEvents(mealEventsResponse, userMealEventsResponse));
