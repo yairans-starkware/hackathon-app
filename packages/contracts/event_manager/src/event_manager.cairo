@@ -1,9 +1,5 @@
-// TODO: Make upgradable.
-// TODO: Add events.
-
 use starknet::ContractAddress;
 use crate::utils::time::Time;
-
 
 /// Basic information about an event, to be stored in the contract.
 #[derive(Drop, Serde, starknet::Store)]
@@ -102,11 +98,13 @@ impl RegistrationStatusImpl of RegistrationStatusTrait {
     }
 }
 
+// Declaration of the contract interface. The interface is used to define the functions that can be
+// called from the outside of the contract.
+// The interface is defined using the `#[starknet::interface]` attribute.
 #[starknet::interface]
 trait IRegistration<T> {
     /// Returns information about the events the user is registered to, within a time range. The
     /// range is [start, end).
-    // TODO: Get rid of the user parameter, and use starknet::get_caller_address() instead.
     fn get_user_events_by_time(
         self: @T, user: ContractAddress, start: Time, end: Time
     ) -> Array<EventUserInfo>;
@@ -176,7 +174,6 @@ mod registration {
         events: Map<usize, EventInfoInner>,
         /// A map from event ID to the users registered to the event. Users who unregistered are
         /// also included, and should be filtered out when needed.
-        // TODO: Add this to the event info.
         registered_users: Map<usize, Vec<ContractAddress>>,
         /// A simple data structure to allow lookup of events by time. The key is the day of the
         /// event, and the value is a vector of event IDs.
@@ -188,10 +185,10 @@ mod registration {
         /// A map from event_id to a map from user to whether the user is registered to the event.
         registration_status: Map<(usize, ContractAddress), RegistrationStatus>,
         /// A set of admins.
-        // TODO: Use Roles component.
         admins: Map<ContractAddress, bool>,
     }
 
+    // The possible events that can be emitted by the contract.
     #[event]
     #[derive(Drop, starknet::Event)]
     enum Event {
@@ -228,11 +225,16 @@ mod registration {
         allowed: bool,
     }
 
+    // The constructor of the contract. It is being called when the contract is deployed (see
+    // deploy_contract.sh).
     #[constructor]
     fn constructor(ref self: ContractState, admin: ContractAddress) {
         self.admins.write(admin, true);
     }
 
+    // #[generate_trait] is useful for traits with only one implementation. It generates a trait
+    // with the same functions as the implementation.
+    /// Helper functions that are not part of the interface.
     #[generate_trait]
     impl PrivateFunctionsImpl of PrivateFunctions {
         /// Adds an event to the contract.
@@ -257,9 +259,7 @@ mod registration {
         }
 
         fn _modify_event_time(ref self: ContractState, event_id: usize, time: felt252) {
-            self._check_event_exists(event_id);
-            // TODO: Check not cancelled.
-
+            self._check_not_canceled(event_id);
             let time = TimeTrait::new(time.try_into().expect('Invalid time'));
             self.events.entry(event_id).time.write(time);
 
@@ -274,12 +274,17 @@ mod registration {
             self._check_event_exists(event_id);
             assert(!self.events.entry(event_id).canceled.read(), 'Event canceled.');
         }
-
+        fn _check_is_admin(self: @ContractState) {
+            let caller_address = starknet::get_caller_address();
+            assert(self.admins.read(caller_address), 'Caller is not an admin.');
+        }
         fn _register_user_to_event(
             ref self: ContractState, event_id: usize, user: ContractAddress
         ) {
             self._check_not_canceled(event_id);
-            // TODO: Explain why we chose to use a pointer here.
+            // The entry method returns a pointer to the storage location of the registration
+            // status.
+            // Using this we avoid computing the address twice while reading and writing.
             let registration_status_ptr = self.registration_status.entry((event_id, user));
             let prev_status = registration_status_ptr.read();
             assert(!prev_status.is_registered(), 'User already registered.');
@@ -299,10 +304,6 @@ mod registration {
             ref self: ContractState, event_id: usize, user: ContractAddress
         ) {
             self._check_event_exists(event_id);
-            // let canceled = self.event_canceled.read(event_id);
-            // let event_time: u256 = self.events.read(event_id).time.into();
-            // assert(event_time < starknet::get_block_timestamp().into(), 'Event already
-            // started.');
             let registration_status_ptr = self.registration_status.entry((event_id, user));
             assert(registration_status_ptr.read().is_registered(), 'User not registered.');
             registration_status_ptr.write(RegistrationStatus::Unregistered);
@@ -362,6 +363,8 @@ mod registration {
         }
     }
 
+    // Implementing the contract interface. #[abi(embed_v0)] is used to indicate that the functions
+    // should be part of the contract's ABI.
     #[abi(embed_v0)]
     impl RegistrationImpl of super::IRegistration<ContractState> {
         fn get_user_events_by_time(
@@ -453,29 +456,28 @@ mod registration {
         }
 
         fn add_event(ref self: ContractState, time: felt252, description: felt252) {
-            // TODO: Check owner.
             self._add_event(time, description);
         }
 
         fn modify_event_time(ref self: ContractState, event_id: usize, time: felt252) {
-            // TODO: Check owner.
+            self._check_is_admin();
             self._modify_event_time(event_id, time);
         }
 
         fn lock_event(ref self: ContractState, event_id: usize) {
-            // TODO: Check owner.
+            self._check_is_admin();
             self._check_event_exists(event_id);
             self.events.entry(event_id).locked.write(true);
         }
 
         fn unlock_event(ref self: ContractState, event_id: usize) {
-            // TODO: Check owner.
+            self._check_is_admin();
             self._check_event_exists(event_id);
             self.events.entry(event_id).locked.write(false);
         }
 
         fn set_event_canceled(ref self: ContractState, event_id: usize, canceled: bool) {
-            // TODO: Check owner.
+            self._check_is_admin();
             self._check_event_exists(event_id);
             self.events.entry(event_id).canceled.write(canceled);
 
@@ -483,7 +485,7 @@ mod registration {
         }
 
         fn add_allowed_user(ref self: ContractState, user: ContractAddress) {
-            // TODO: Check owner.
+            self._check_is_admin();
             assert(!self.allowed_users.read(user), 'User already registered.');
             self.allowed_users.write(user, true);
 
@@ -491,7 +493,7 @@ mod registration {
         }
 
         fn remove_allowed_user(ref self: ContractState, user: ContractAddress) {
-            // TODO: Check owner.
+            self._check_is_admin();
             assert(self.allowed_users.read(user), 'User not registered.');
             self.allowed_users.write(user, false);
 
@@ -499,7 +501,7 @@ mod registration {
         }
 
         fn add_allowed_users(ref self: ContractState, users: Span<ContractAddress>) {
-            // TODO: Check owner.
+            self._check_is_admin();
             for user in users {
                 self.add_allowed_user(*user);
             }
@@ -510,6 +512,7 @@ mod registration {
         }
 
         fn register(ref self: ContractState, event_id: usize) {
+            // The caller address is the user who called the contract.
             let user = starknet::get_caller_address();
 
             // Check that the user is allowed to register to events.

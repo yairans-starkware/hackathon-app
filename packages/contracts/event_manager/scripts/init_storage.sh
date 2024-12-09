@@ -13,11 +13,11 @@ sleep 15
 starkli invoke $CONTRACT_ADDRESS add_allowed_user $FE_ADDRESS
 sleep 15
 
-# Add events, for the next year, Monday, Tuesday and Wednesday at 12:00 (UTC+2). inputs are time and price.
+# Add events, for the next few weeks, Monday, Tuesday and Wednesday at 12:00 (UTC+2). inputs are time and price.
 BASE_TIME=1732528800
 SECONDS_IN_DAY=60*60*24
 SECONDS_IN_WEEK=60*60*24*7
-for i in {0..52}
+for i in {0..12}
 do
   starkli invoke $CONTRACT_ADDRESS add_event $((BASE_TIME + i * SECONDS_IN_WEEK)) str:Aviv_Moshe && sleep 15
   starkli invoke $CONTRACT_ADDRESS add_event $((BASE_TIME + i * SECONDS_IN_WEEK + SECONDS_IN_DAY)) str:Hashuka && sleep 15
