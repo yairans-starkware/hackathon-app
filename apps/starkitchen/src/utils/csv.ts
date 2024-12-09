@@ -1,3 +1,4 @@
+/// A simple utility function to export JSON data to CSV.
 export const exportJSONToCSV = (jsonData: Object, fileName = 'data.csv') => {
   // 1. Convert JSON to an array of objects (if it's not already)
   const array = Array.isArray(jsonData) ? jsonData : [jsonData];
