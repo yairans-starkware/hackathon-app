@@ -1,5 +1,5 @@
-import { Card, CardContent, CardFooter, CardHeader } from "../ui/card";
-import {Skeleton} from '@/components/ui/skeleton';
+import { Card, CardContent, CardFooter, CardHeader } from '../ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export const MealCardSkeleton = () => (
   <Card>
@@ -15,4 +15,4 @@ export const MealCardSkeleton = () => (
       <Skeleton className="h-10 w-full" />
     </CardFooter>
   </Card>
-)
+);

@@ -15,4 +15,4 @@ export const feltToString = (felt: string) => {
   }
 
   return result;
-}
+};

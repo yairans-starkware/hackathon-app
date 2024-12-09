@@ -1,25 +1,44 @@
-import { Download, Search, UserPlus } from "lucide-react"
-import { Button } from "../ui/button"
-import { Textarea } from "../ui/textarea";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "../ui/card"
-import { Badge } from "../ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
-import { getCurrentDate, getMonthOptions, getTimestampForFirstDayOfMonth, getTimestampForLastDayOfMonth } from "../../utils/date";
-import {Input} from '../ui/input';
-import { useEffect, useMemo, useState } from "react";
-import { truncateAddress } from "../../utils/string";
-import { exportJSONToCSV } from "../../utils/csv";
-import { ReportEnhancementData, ReportWallet } from "../../types/report";
-import { useContract } from "@starknet-react/core";
-import { ABI, CONTRACT_ADDRESS } from "../../utils/consts";
+import { Download, Search, UserPlus } from 'lucide-react';
+import { Button } from '../ui/button';
+import { Textarea } from '../ui/textarea';
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '../ui/card';
+import { Badge } from '../ui/badge';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../ui/select';
+import {
+  getCurrentDate,
+  getMonthOptions,
+  getTimestampForFirstDayOfMonth,
+  getTimestampForLastDayOfMonth,
+} from '../../utils/date';
+import { Input } from '../ui/input';
+import { useEffect, useMemo, useState } from 'react';
+import { truncateAddress } from '../../utils/string';
+import { exportJSONToCSV } from '../../utils/csv';
+import { ReportEnhancementData, ReportWallet } from '../../types/report';
+import { useContract } from '@starknet-react/core';
+import { ABI, CONTRACT_ADDRESS } from '../../utils/consts';
 
-const {month: currentMonth, year: currentYear} = getCurrentDate();
+const { month: currentMonth, year: currentYear } = getCurrentDate();
 
 export const ManagementTab = () => {
   const [newUserAddress, setNewUserAddress] = useState<string>();
   const [reportWallets, setReportWallets] = useState<ReportWallet[]>([]);
   const [walletEnhancementData, setWalletEnhancementData] = useState('');
-  const [selectedDate, setSelectedDate] = useState<string>(`${currentYear}-${currentMonth}`);
+  const [selectedDate, setSelectedDate] = useState<string>(
+    `${currentYear}-${currentMonth}`,
+  );
   const [searchTerm, setSearchTerm] = useState('');
   const monthOptions = getMonthOptions();
   const { contract } = useContract({
@@ -29,43 +48,63 @@ export const ManagementTab = () => {
 
   const handleLoadUserData = () => {
     const updatedReportWallets = [...reportWallets];
-    const enhancementReportData: ReportEnhancementData[] = JSON.parse(walletEnhancementData);
-    enhancementReportData.forEach(({name, email, address}) => {
-      const userData = updatedReportWallets.find(({user}) => address.includes(user.split('').slice(2).join('')))!
+    const enhancementReportData: ReportEnhancementData[] = JSON.parse(
+      walletEnhancementData,
+    );
+    enhancementReportData.forEach(({ name, email, address }) => {
+      const userData = updatedReportWallets.find(({ user }) =>
+        address.includes(user.split('').slice(2).join('')),
+      )!;
       userData.email = email;
       userData.name = name;
     });
 
     setWalletEnhancementData('');
     setReportWallets(updatedReportWallets);
-  }
+  };
 
   const handleGrantAccess = async () => {
     await contract.populate('add_allowed_user', [newUserAddress]);
     setNewUserAddress('');
-  }
+  };
 
   const handleExportStats = () => {
     exportJSONToCSV(reportWallets);
-  }
+  };
 
   useEffect(() => {
     const getReportData = async () => {
       const start = getTimestampForFirstDayOfMonth(selectedDate);
       const end = getTimestampForLastDayOfMonth(selectedDate);
-      const reportData = await contract.get_participation_report_by_time({seconds: Math.floor(start / 1000)}, {seconds: Math.floor(end / 1000)});
+      const reportData = await contract.get_participation_report_by_time(
+        { seconds: Math.floor(start / 1000) },
+        { seconds: Math.floor(end / 1000) },
+      );
 
-      setReportWallets(reportData.map(({user, n_participations}: { user: BigInt, n_participations: BigInt }) => ({
-        user: "0x" + user.toString(16),
-        n_participations: Number(n_participations),
-      })));
-    }
+      setReportWallets(
+        reportData.map(
+          ({
+            user,
+            n_participations,
+          }: {
+            user: BigInt;
+            n_participations: BigInt;
+          }) => ({
+            user: '0x' + user.toString(16),
+            n_participations: Number(n_participations),
+          }),
+        ),
+      );
+    };
 
     getReportData();
-  }, [selectedDate])
+  }, [selectedDate]);
 
   const filteredReportWallets = useMemo(() => {
-    return reportWallets.filter(({user, name}) => user.includes(searchTerm) || name?.includes(searchTerm));
+    return reportWallets.filter(
+      ({ user, name }) =>
+        user.includes(searchTerm) || name?.includes(searchTerm),
+    );
   }, [searchTerm, reportWallets]);
 
   return (
@@ -78,9 +117,12 @@ export const ManagementTab = () => {
               <SelectValue placeholder="Select month" />
             </SelectTrigger>
             <SelectContent>
-              {monthOptions.map((option) => (
+              {monthOptions.map(option => (
                 <SelectItem key={option} value={option}>
-                  {new Date(option).toLocaleString('default', { month: 'long', year: 'numeric' })}
+                  {new Date(option).toLocaleString('default', {
+                    month: 'long',
+                    year: 'numeric',
+                  })}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -98,17 +140,18 @@ export const ManagementTab = () => {
             type="text"
             placeholder="Search user by address"
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={e => setSearchTerm(e.target.value)}
             className="pl-10"
           />
         </div>
         <div className="h-[300px] overflow-y-auto space-y-4">
-          {filteredReportWallets.map(({user, n_participations, name}) => (
-            <div key={user} className="flex items-center justify-between p-4 bg-white rounded-lg shadow">
+          {filteredReportWallets.map(({ user, n_participations, name }) => (
+            <div
+              key={user}
+              className="flex items-center justify-between p-4 bg-white rounded-lg shadow"
+            >
               <span className="font-semibold">{`${truncateAddress(user)} (${name ?? 'Unknown'})`}</span>
-              <Badge variant="secondary">
-                Meals: {n_participations}
-              </Badge>
+              <Badge variant="secondary">Meals: {n_participations}</Badge>
             </div>
           ))}
         </div>
@@ -123,7 +166,7 @@ export const ManagementTab = () => {
               type="text"
               placeholder="Enter user wallet address"
               value={newUserAddress}
-              onChange={(e) => setNewUserAddress(e.target.value)}
+              onChange={e => setNewUserAddress(e.target.value)}
             />
             <Button onClick={handleGrantAccess}>
               <UserPlus className="mr-2 h-4 w-4" />
@@ -140,16 +183,14 @@ export const ManagementTab = () => {
           <Textarea
             placeholder='[{"name": "Satoshi", "address": "0x1234...5678", "email": "satoshi@nakamoto"} ... ]'
             value={walletEnhancementData}
-            onChange={(e) => setWalletEnhancementData(e.target.value)}
+            onChange={e => setWalletEnhancementData(e.target.value)}
             className="min-h-[100px]"
           />
         </CardContent>
         <CardFooter>
-          <Button onClick={handleLoadUserData}>
-            Enhance
-          </Button>
+          <Button onClick={handleLoadUserData}>Enhance</Button>
         </CardFooter>
       </Card>
     </>
-  )
-}
+  );
+};

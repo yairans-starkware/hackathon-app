@@ -11,7 +11,7 @@ export const exportJSONToCSV = (jsonData: Object, fileName = 'data.csv') => {
     ...array.map(row =>
       headers
         .map(header => JSON.stringify(row[header] || '')) // Escape and handle empty values
-        .join(',')
+        .join(','),
     ),
   ];
 
@@ -33,4 +33,4 @@ export const exportJSONToCSV = (jsonData: Object, fileName = 'data.csv') => {
   // 7. Clean up
   document.body.removeChild(link);
   URL.revokeObjectURL(url);
-}
+};

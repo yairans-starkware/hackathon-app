@@ -5,14 +5,14 @@ import path from 'path';
 export default defineConfig({
   define: {
     process: {
-      env: {}
+      env: {},
     },
   },
   plugins: [react()],
   base: '',
   resolve: {
     alias: {
-      "@": path.resolve(__dirname, "./src"),
+      '@': path.resolve(__dirname, './src'),
     },
   },
-})
+});
