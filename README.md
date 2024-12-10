@@ -1,45 +1,49 @@
 # Welcome to the StarKitchen app monorepo
 
-## Getting Started
+This repo contains an example of an app built on top of Starknet using React and Cairo.
+The main goal of this repo is to be used as a template for your Starknet app.
+
+## Getting Started (Front End)
+
+This section covers the first needed to run the app and make modifications to the front end. For editing the smart contract see [packages/contracts/README.md]
 
 Follow these steps to get started with the monorepo and set up your project:
 
-1. **Decide on the Look and Feel**
-   - Use tools like [https://v0.dev](https://v0.dev) or similar to play around and decide on the design and aesthetics of your project.
-
-2. **Fork and Clone the Repository**
+1. **Fork and Clone the Repository**
    - Fork this repository and clone it to your local machine.
 
-3. **Install Node.js**
+2. **Install Node.js**
    - Ensure you have **Node.js v20 or higher** installed on your computer. Download it from [Node.js](https://nodejs.org).
 
-4. **Install `pnpm` Globally**
+3. **Install `pnpm` Globally**
    - Run the following command to install `pnpm` globally:
      ```bash
      npm install -g pnpm
      ```
 
-5. **Navigate to the Monorepo Root**
+4. **Navigate to the Monorepo Root**
    - Change to the root directory of the monorepo:
      ```bash
      cd <path-to-monorepo-root>
      ```
 
-6. **Update Application Name**
-   - Replace all occurrences of `"catering-app"` and `"starkitchen"` in the repository with your desired application name. This may include package names, configurations, or deployment references.
-
-7. **Install Dependencies**
+5. **Install Dependencies**
    - Run the following command to install all dependencies:
      ```bash
      pnpm i
      ```
 
-8. **Customize Functionality**
+6. **Update Application Name (optional)**
+   - Replace all occurrences of `"catering-app"` and `"starkitchen"` in the repository with your desired application name. This may include package names, configurations, or deployment references.
+
+
+7. **Customize Functionality**
    - Navigate to the `apps/starkitchen` folder:
      ```bash
      cd apps/starkitchen
      ```
    - Start adding or removing functionality to tailor it to your app's requirements. **Important:** Do not delete the `components/ui` folder, as it contains essential UI components.
+   - You can use tools like [https://v0.dev](https://v0.dev) or similar to play around and decide on the design and aesthetics of your project.
 
 9. **Run the App**
    - Start the app using one of the following commands:
@@ -73,7 +77,7 @@ Follow these steps to get started with the monorepo and set up your project:
 ### Working With the contracts:
 
 1. **Set contract values**
-  - After deploying your contract go to `consts.ts` and change the `ABI` and `CONTRACT_ADDRESS` values.
+  - After deploying your contract go to `consts.ts` and change the `ABI` and `CONTRACT_ADDRESS` values (see details in the file).
 
 2. **`useAccount` hook** 
   - use the `useAccount` hook to get the connected user wallet address.

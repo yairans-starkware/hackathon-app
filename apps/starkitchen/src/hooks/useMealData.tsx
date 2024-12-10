@@ -13,6 +13,8 @@ const aYearAgoTimestampSeconds = getTimestampForFirstDayOfMonth(
 const aMonthFromNowTimestampSeconds =
   Math.floor(Date.now() / 1000) + 30 * 24 * 60 * 60;
 
+/// Various hooks to interact with the meal contract.
+// TODO(Liad): Add more documentation.
 export const useMealData = () => {
   const [loadingAllEvents, setLoadingAllEvents] = useState(true);
   const [isSuccessFetchingUserEvents, setSuccessFetchingUserEvents] =

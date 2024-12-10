@@ -1,9 +1,17 @@
 import { Abi } from '@starknet-react/core';
 
+/// A prefix to be added to the src path of resources (images, etc.) in order to correctly load them. 
+/// Production mode is when deploying the app to a server, github pages in our case.
 export const SrcPrefix =
   import.meta.env.MODE === 'production' ? '/catering-app' : '';
+
+/// The address of the deployed contract.
 export const CONTRACT_ADDRESS =
   '0x049c75609bb077a9427bc26a9935472ec75e5508ed216ef7f7ad2693397deebc';
+/// The ABI of the deployed contract. Can be found on starkscan. 
+/// For the above contract, the ABI can be found at:
+/// https://sepolia.starkscan.co/contract/0x049c75609bb077a9427bc26a9935472ec75e5508ed216ef7f7ad2693397deebc
+/// And the ABI is accessible under the 'Class Code/History' tab -> 'Copy ABI Code' button.
 export const ABI = [
   {
     name: 'RegistrationImpl',
