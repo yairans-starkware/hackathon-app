@@ -32,13 +32,14 @@ export const useMealData = () => {
     address: CONTRACT_ADDRESS,
     args: [address],
   });
+
   const { data: allTimeReportResponse, refetch: getParticipationReportByTime } =
     useReadContract({
       enabled: false,
       functionName: 'get_participation_report_by_time',
       abi: ABI,
       address: CONTRACT_ADDRESS,
-      args: [{ seconds: 0 }, { seconds: Math.floor(Date.now() / 1000) }],
+      args: [{ seconds: 0 }, { seconds: 2734816767 }],
     });
   const { data: rawMealEvents, refetch: getEventsInfosByTime } =
     useReadContract({
@@ -103,7 +104,7 @@ export const useMealData = () => {
         },
       };
 
-      await getParticipationReportByTime();
+      getParticipationReportByTime();
       setUserMealParticipations([
         ...enhancedMealEvents.slice(0, indexOfUpdatedMeal),
         { ...newMeal },
