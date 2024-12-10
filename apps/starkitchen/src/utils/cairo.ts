@@ -19,7 +19,7 @@ export const feltToString = (felt: string) => {
   }
 
   return result;
-}
+};
 
 /// Convert a string with up to 31 characters to a felt, represented as a string.
 export const stringToFelt = (str: string) => {
@@ -36,4 +36,4 @@ export const stringToFelt = (str: string) => {
 
   // Convert the hex string to a BigInt
   return BigInt('0x' + hexString).toString();
-}
+};

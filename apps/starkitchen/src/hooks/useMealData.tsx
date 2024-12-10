@@ -14,18 +14,18 @@ const aMonthFromNowTimestampSeconds =
   Math.floor(Date.now() / 1000) + 30 * 24 * 60 * 60;
 
 /// Various hooks to interact with the meal contract.
-// TODO(Liad): Add more documentation.
 export const useMealData = () => {
   const [loadingAllEvents, setLoadingAllEvents] = useState(true);
   const [isSuccessFetchingUserEvents, setSuccessFetchingUserEvents] =
     useState(false);
   const { address, isConnecting } = useAccount();
   const { data: isAdmin, refetch: getIsAdmin } = useReadContract({
-    functionName: 'is_admin',
-    enabled: false,
-    abi: ABI,
-    address: CONTRACT_ADDRESS,
-    args: [address],
+    // Read data from the contract
+    functionName: 'is_admin', // The function name in the contract
+    enabled: false, // Should we fetch the data immediately or later(manually)
+    abi: ABI, // TODO: Replace with your own ABI
+    address: CONTRACT_ADDRESS, // TODO: Replate with your contract address
+    args: [address], // The contract method's arguments as an array
   });
   const { data: isAllowedUser, refetch: getIsAllowedUser } = useReadContract({
     functionName: 'is_allowed_user',
