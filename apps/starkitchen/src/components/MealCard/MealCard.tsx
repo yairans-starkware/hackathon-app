@@ -10,7 +10,7 @@ import { AlertCircle, Check, Users, UtensilsCrossed, X } from 'lucide-react';
 import { Badge } from '../ui/badge';
 import { Meal } from '../../types/meal';
 import { openFullscreenLoader } from '../FullscreenLoaderModal/FullscreenLoaderModal';
-import { feltToString } from '../../utils/cairo';
+import { shortString } from "starknet";
 import { ABI, CONTRACT_ADDRESS } from '../../utils/consts';
 import { useContract, useSendTransaction } from '@starknet-react/core';
 import { useMemo } from 'react';
@@ -105,7 +105,7 @@ export const MealCard = ({
         <p className="text-sm text-gray-700 mt-2">
           <UtensilsCrossed className="inline-block mr-1 h-4 w-4" />
           Catering:{' '}
-          {feltToString(meal.info?.description ?? '') ?? 'Not Set Yet'}
+          {shortString.decodeShortString(meal.info?.description ?? '') ?? 'Not Set Yet'}
         </p>
         {isWalletConnected &&
         !isAllowedUser &&
